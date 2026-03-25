@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import os
 
-st.set_page_config(page_title="NEXUS CAPITAL • Terminal", layout="wide", page_icon="🔹")
+st.set_page_config(page_title="NEXUS CAPITAL", layout="wide", page_icon="🔹")
 
 st.markdown("""
 <style>
@@ -63,8 +63,8 @@ with tab1:
         st.info(f"Wallet: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
 
 with tab2:  # World Risk Monitor
-    st.subheader("🌍 Global Risk Monitor (WorldMonitor.app)")
-    st.caption("Live conflicts, military, sanctions, waterways, and economic pressure")
+    st.subheader("🌍 Global Risk Monitor")
+    st.caption("Live from WorldMonitor.app")
     st.markdown("""
     **Critical Hotspots:**
     - Middle East: High escalation (Iran-Israel, Strait of Hormuz disruptions)
@@ -74,10 +74,9 @@ with tab2:  # World Risk Monitor
     """)
     st.info("**AI Insight:** High geopolitical risk = elevated volatility in BTC/ETH and prediction markets.")
 
-with tab3:  # Global Indices (from TradingView / Investing.com data)
+with tab3:  # Global Indices
     st.subheader("📊 Live World Indices")
-    st.caption("Real-time data from TradingView & Investing.com (as of March 2026)")
-
+    st.caption("Data from TradingView / Investing.com (as of March 2026)")
     indices = [
         ("Dow Jones", 46124.06, -0.18),
         ("S&P 500", 6556.37, -0.37),
@@ -87,7 +86,6 @@ with tab3:  # Global Indices (from TradingView / Investing.com data)
         ("Nikkei 225", 53819.64, 3.00),
         ("Hang Seng", 25280.52, 0.87),
     ]
-
     for name, price, change in indices:
         color = "positive" if change > 0 else "negative"
         st.markdown(f'<div class="card">**{name}** — ${price:,.2f} <span class="{color}">({change:+.2f}%)</span></div>', unsafe_allow_html=True)
@@ -106,7 +104,13 @@ with tab4:  # Polymarket
     for m in get_markets()[:10]:
         q = m.get("question", "Unknown")
         outcome_prices = m.get("outcomePrices", [0.5, 0.5])
-        yes_price = float(outcome_prices[0]) if outcome_prices and outcome_prices[0] is not None else 0.5
+        
+        # SAFE PRICE HANDLING - THIS FIXES THE ERROR
+        try:
+            yes_price = float(outcome_prices[0]) if outcome_prices and len(outcome_prices) > 0 and outcome_prices[0] is not None else 0.5
+        except:
+            yes_price = 0.5
+
         volume = float(m.get("volume", 0))
         implied = abs(yes_price - 0.5) * 200
         edge = implied - 48 - 2.0
