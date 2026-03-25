@@ -5,10 +5,14 @@ import streamlit as st
 import pandas as pd
 import random
 import time
+import json
+import requests
 from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 import base64
 import logging
+import qrcode
+from io import BytesIO
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -214,8 +218,6 @@ def render_wallet_connection():
 # ------------------------------------------------------------------
 def generate_qr_code(data):
     """Generate QR code for wallet address"""
-    import qrcode
-    from io import BytesIO
     qr = qrcode.make(data)
     img_buffer = BytesIO()
     qr.save(img_buffer, format='PNG')
@@ -316,12 +318,12 @@ with top_cols[3]:
 col_net1, col_net2, col_net3 = st.columns(3)
 is_online = check_internet_connection()
 if is_online:
-    col_net1.info(f"🌐 Internet status: <span class='status-online'>ONLINE</span>", unsafe_allow_html=True)
+    col_net1.info("🌐 Internet status: <span class='status-online'>ONLINE</span>", unsafe_allow_html=True)
     eth_price = get_eth_price()
     col_net2.info(f"💰 ETH price: <span class='status-online'>$ {eth_price:,.2f}</span>", unsafe_allow_html=True)
     col_net3.info(f"📦 Data updated: {datetime.now().strftime('%H:%M:%S')}", unsafe_allow_html=True)
 else:
-    col_net1.error(f"🌐 Internet status: <span class='status-offline'>OFFLINE</span>", unsafe_allow_html=True)
+    col_net1.error("🌐 Internet status: <span class='status-offline'>OFFLINE</span>", unsafe_allow_html=True)
     col_net2.warning(f"💰 ETH price: <span class='status-offline'>Using fallback: $ {st.session_state.eth_price:,.2f}</span>", unsafe_allow_html=True)
     col_net3.warning("📦 Live data unavailable - using simulation", unsafe_allow_html=True)
 
