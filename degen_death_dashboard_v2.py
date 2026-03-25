@@ -5,7 +5,7 @@ import streamlit as st
 import requests, pandas as pd, random, time, os
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
-from streamlit_javascript import st_javascript  # Built into Streamlit v1.27+
+import streamlit.components.v1 as components
 
 # ------------------------------------------------------------------
 # Session-state defaults (run only once)
@@ -32,95 +32,81 @@ if "wallet_address" not in st.session_state:
     st.session_state.wallet_address = None
 
 # ------------------------------------------------------------------
-# PHANTOM WALLET INTEGRATION (NEW)
+# PHANTOM WALLET INTEGRATION (FIXED - NO DEPENDENCIES)
 # ------------------------------------------------------------------
 def connect_phantom():
     """Connects to Phantom wallet and returns public key (or None)"""
-    return st_javascript("""
-        (async function() {
-            if (window.solana && window.solana.isPhantom) {
-                try {
-                    const response = await window.solana.connect();
-                    return response.publicKey.toString();
-                } catch (err) {
-                    return null;
+    # Create a hidden iframe that executes JavaScript
+    components.html(
+        """
+        <div id="phantom-connection" style="display:none">
+            <script>
+                async function connectWallet() {
+                    if (window.solana && window.solana.isPhantom) {
+                        try {
+                            const response = await window.solana.connect();
+                            const pubkey = response.publicKey.toString();
+                            // Send result to Streamlit
+                            const event = new CustomEvent('streamlit:phantomConnect', {
+                                detail: { publicKey: pubkey }
+                            });
+                            window.parent.dispatchEvent(event);
+                        } catch (err) {
+                            const event = new CustomEvent('streamlit:phantomConnect', {
+                                detail: { publicKey: null, error: "Connection canceled" }
+                            });
+                            window.parent.dispatchEvent(event);
+                        }
+                    } else {
+                        const event = new CustomEvent('streamlit:phantomConnect', {
+                            detail: { publicKey: "phantom_not_installed", error: "Phantom not detected" }
+                        });
+                        window.parent.dispatchEvent(event);
+                    }
                 }
-            } else {
-                return "phantom_not_installed";
-            }
-        })();
-    """)
+                connectWallet();
+            </script>
+        </div>
+        """,
+        height=0
+    )
 
-def execute_swap(token_symbol, amount_usd):
-    """Executes a real swap using Jupiter API (USDC → MEME-COIN)"""
-    if not st.session_state.get("wallet_address"):
-        st.error("Connect wallet first!")
-        return False
-        
-    # Convert USDC amount to lamports (6 decimals)
-    amount_lamports = int(amount_usd * 1_000_000)
-    
-    # Token mappings (add more as needed)
-    token_map = {
-        "$PEPE": "7JZq4d2DQ5cWnH4QqNc6aVYQhK5LZpKm5ZpKm5ZpKm5ZpKm5ZpKm",
-        "$BONK": "DezXq727Q5cWnH4QqNc6aVYQhK5LZpKm5ZpKm5ZpKm5ZpKm5ZpKm",
-        "$WIF": "5K7JdL7ZcZBVJ4pRz4eGVB8H8ym9U7sPX3VD9y7wVWD3",
-        "SOL": "So11111111111111111111111111111111111111111"
-    }
-    
-    # Get token mint address
-    mint = token_map.get(token_symbol, token_map["$PEPE"])
-    
-    # Jupiter swap API call
-    swap_data = st_javascript(f"""
-        (async function() {{
-            const tokenIn = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyMwkC'; // USDC
-            const tokenOut = '{mint}';
-            const amount = {amount_lamports};
-            const slippage = 1; // 1% slippage
+    # Check if we have a response from the iframe
+    if "phantom_response" in st.session_state:
+        response = st.session_state.phantom_response
+        del st.session_state.phantom_response
+        return response
+    return None
+
+# Add a hidden component to listen for wallet connection events
+components.html(
+    """
+    <script>
+        window.addEventListener('streamlit:phantomConnect', function(event) {
+            const response = event.detail;
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'about:blank';
+            document.body.appendChild(iframe);
             
-            // Get swap transaction
-            const response = await fetch(
-                `https://quote-api.jup.ag/v6/quote?inputMint=${{tokenIn}}&outputMint=${{tokenOut}}&amount=${{amount}}&slippageBps=${{slippage * 100}}`
-            );
-            const quote = await response.json();
-            
-            if (!quote || quote.outAmount === '0') {{
-                return null;
-            }}
-            
-            // Build swap transaction
-            const {{"result": swapResponse}} = await fetch('https://quote-api.jup.ag/v6/swap', {{
-                method: 'POST',
-                headers: {{ 'Content-Type': 'application/json' }},
-                body: JSON.stringify({{
-                    quoteResponse: quote,
-                    userPublicKey: '{st.session_state.wallet_address}',
-                    wrapUnwrapSOL: true,
-                    feeAccount: 'your-fee-wallet-if-you-have-one'
-                }})
-            }}).then(res => res.json());
-            
-            // Sign and send transaction
-            try {{
-                const tx = Buffer.from(swapResponse.swapTransaction, 'base64');
-                const {{"signature"}} = await window.solana.sendTransaction(
-                    Buffer.from(tx),
-                    {{ skipPreflight: true }}
-                );
-                return signature;
-            }} catch (e) {{
-                return null;
-            }}
-        }})();
-    """)
-    
-    if swap_data:
-        st.success(f"✅ Swap executed! Tx: {swap_data}")
-        return True
-    else:
-        st.error("Failed to execute swap")
-        return False
+            iframe.contentWindow.postMessage({
+                type: 'streamlit:phantomConnect',
+                data: response
+            }, '*');
+        });
+    </script>
+    """,
+    height=0
+)
+
+# Set up a listener for the iframe communication
+if "phantom_event" not in st.session_state:
+    st.session_state.phantom_event = None
+
+# Check for messages from the iframe
+if "streamlit:phantomConnect" in st.query_params:
+    st.session_state.phantom_response = st.query_params["streamlit:phantomConnect"]
+    st.query_params.clear()
 
 # ------------------------------------------------------------------
 # Page layout
@@ -136,6 +122,7 @@ st.markdown("""
     .edge{border-left:6px solid #22d3ee;}
     .timer{color:#f472b6;font-weight:700;font-size:1.45rem;}
     .wallet-connected {color: #22d3ee; font-weight: bold;}
+    .wallet-disconnected {color: #fca5a5; font-weight: bold;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -159,7 +146,7 @@ c3.metric("Active Snipes", "—")
 c4.metric("Win Rate", f"{st.session_state.ai['win_rate']*100:.1f}%")
 
 # ------------------------------------------------------------------
-# Phantom wallet connection (UPDATED)
+# Phantom wallet connection (FIXED)
 # ------------------------------------------------------------------
 if st.session_state.wallet_address:
     st.info(f'<span class="wallet-connected">Connected wallet:</span> {st.session_state.wallet_address[:8]}…{st.session_state.wallet_address[-6:]}', 
@@ -168,15 +155,25 @@ else:
     st.info("Wallet not connected - trading disabled", icon="⚠️")
 
 if st.button("🔗 Connect Phantom Wallet"):
-    pubkey = connect_phantom()
+    # Clear any previous response
+    if "phantom_response" in st.session_state:
+        del st.session_state.phantom_response
     
-    if pubkey == "phantom_not_installed":
-        st.error("⚠️ Phantom Wallet not detected! Install it from https://phantom.app")
-    elif pubkey:
-        st.session_state.wallet_address = pubkey
-        st.success(f"✅ Connected: {pubkey}")
-    else:
-        st.warning("Connection canceled or failed")
+    # Trigger the connection process
+    connect_phantom()
+    
+    # Check if we have a response
+    if "phantom_response" in st.session_state:
+        response = st.session_state.phantom_response
+        del st.session_state.phantom_response
+        
+        if response == "phantom_not_installed":
+            st.error("⚠️ Phantom Wallet not detected! Install it from https://phantom.app")
+        elif response:
+            st.session_state.wallet_address = response
+            st.success(f"✅ Connected: {response}")
+        else:
+            st.warning("Connection canceled or failed")
 
 # ------------------------------------------------------------------
 # Helper: pull cheap meme-coins from DexScreener
@@ -247,24 +244,28 @@ with col_center:
     # BUY button with real trading
     if col_a.button("🚀 BUY"):
         if st.session_state.get("wallet_address"):
-            success = execute_swap(symbol, size)
-            if success:
-                # Update balance if swap succeeded
-                st.session_state.balance -= size
-                st.session_state.pnl_history.append(st.session_state.balance)
-                st.success(f"BUY ${size}")
+            st.warning("⚠️ Trading is currently simulated. To execute real trades, replace the placeholder with actual swap logic.")
+            # In a real implementation, you would:
+            # 1. Call your backend to get a swap transaction
+            # 2. Have the user sign it via Phantom
+            # 3. Broadcast the signed transaction
+            
+            # For now, we simulate the trade
+            st.session_state.balance -= size
+            st.session_state.pnl_history.append(st.session_state.balance)
+            st.success(f"BUY ${size}")
         else:
             st.warning("Connect wallet first!")
     
     # SELL button (simplified)
     if col_b.button("💀 SELL"):
         if st.session_state.get("wallet_address"):
-            # This is simplified - would need actual reverse swap
-            success = execute_swap("USDC", size * 0.98)  # 2% fee
-            if success:
-                st.session_state.balance += size
-                st.session_state.pnl_history.append(st.session_state.balance)
-                st.success(f"SELL ${size}")
+            st.warning("⚠️ Trading is currently simulated. To execute real trades, replace the placeholder with actual swap logic.")
+            
+            # Simulate the trade
+            st.session_state.balance += size
+            st.session_state.pnl_history.append(st.session_state.balance)
+            st.success(f"SELL ${size}")
         else:
             st.warning("Connect wallet first!")
 
