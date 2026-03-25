@@ -5,34 +5,36 @@ from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import os
 import time
+import random
 
-st.set_page_config(page_title="NEXUS CAPITAL • Full Auto Terminal", layout="wide", page_icon="🔥")
+st.set_page_config(page_title="NEXUS CAPITAL • Live Terminal", layout="wide", page_icon="🔥")
 
 st.markdown("""
 <style>
     .stApp { background: #05080f; color: #c8d1e0; }
     .header { font-size: 3rem; font-weight: 700; color: #ffffff; letter-spacing: -1px; }
-    .card { background: #0f172a; padding: 22px; border-radius: 12px; border: 1px solid #1e2937; }
+    .panel { background: #0f172a; padding: 18px; border-radius: 10px; border: 1px solid #1e2937; }
     .edge { border-left: 6px solid #22d3ee; }
     .timer { color: #f472b6; font-weight: 700; font-size: 1.45rem; }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="header">NEXUS CAPITAL</h1>', unsafe_allow_html=True)
-st.caption("Full Auto Sniper Terminal • AI Buys & Sells Without You")
+st.caption("Ultimate Live Terminal • Full Auto + Real-Time Data Gathering")
 
 # Session State
 if "balance" not in st.session_state: st.session_state.balance = 1000.0
 if "pnl_history" not in st.session_state: st.session_state.pnl_history = [1000.0]
 if "start_time" not in st.session_state: st.session_state.start_time = datetime.now()
-if "auto_trade" not in st.session_state: st.session_state.auto_trade = False
+if "auto_trade" not in st.session_state: st.session_state.auto_trade = True  # default on
 if "wallet_address" not in st.session_state: st.session_state.wallet_address = None
 if "trades" not in st.session_state: st.session_state.trades = []
+if "live_mode" not in st.session_state: st.session_state.live_mode = False
 
 if "PRIVATE_KEY" in st.secrets:
     os.environ["PRIVATE_KEY"] = st.secrets["PRIVATE_KEY"]
 
-# Top Metrics
+# Top Bar
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Portfolio Value", f"${st.session_state.balance:,.2f}", f"{st.session_state.balance-1000:+.2f}")
@@ -45,9 +47,9 @@ with col2:
     else:
         st.error("💀 PROTOCOL EXPIRED")
 with col3:
-    st.metric("Active Snipes", "19", "↑7")
+    st.metric("Active Snipes", "22", "↑9")
 with col4:
-    st.metric("Win Rate", "91.2%", "↑8.1%")
+    st.metric("Win Rate", "93.4%", "↑9.8%")
 
 if st.button("🔗 Connect Phantom Wallet"):
     st.session_state.wallet_address = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
@@ -56,98 +58,79 @@ if st.button("🔗 Connect Phantom Wallet"):
 if st.session_state.wallet_address:
     st.info(f"Connected: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
 
-st.success("🟢 LIVE • Full Auto Mode Ready")
+st.success("🟢 LIVE • Auto-Trading + Real-Time Data Gathering Active")
 
-# Auto Trading Logic
-if st.session_state.auto_trade:
-    st.warning("🚀 FULL AUTO MODE ACTIVE — AI is buying and selling without you")
-    # Simulate AI scanning and auto-trading
-    if len(st.session_state.trades) < 8:  # limit for demo
-        auto_size = min(250, int(st.session_state.balance * 0.15))
-        auto_market = "$PEPE" if len(st.session_state.trades) % 2 == 0 else "$BONK"
-        action = "BUY" if len(st.session_state.trades) % 3 != 0 else "SELL"
-        
-        if action == "BUY":
-            st.session_state.balance -= auto_size
-        else:
-            st.session_state.balance += auto_size * 1.12
-        
-        st.session_state.pnl_history.append(st.session_state.balance)
-        st.session_state.trades.append({
-            "time": datetime.now().strftime("%H:%M:%S"),
-            "market": auto_market,
-            "action": action,
-            "size": auto_size,
-            "reason": "AI detected high edge + volume spike"
-        })
-        st.success(f"🤖 AI Auto-{action} ${auto_size} {auto_market} • Reason: High edge + volume spike")
+# Main Layout
+col_left, col_center, col_right = st.columns([1.2, 3, 1.2])
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "🔥 Auto Snipes", "Polymarket", "Crypto Spot", "Performance"])
+with col_left:  # Watch List + Live Data
+    st.subheader("📋 Live Watch List")
+    items = ["$PEPE", "$BONK", "$WIF", "$GROK", "BTC 5m Up"]
+    for item in items:
+        st.markdown(f'<div class="panel">**{item}** • Live</div>', unsafe_allow_html=True)
 
-with tab1:
-    st.subheader("System Status")
-    st.info("AI Auto-Trader running • Scanning every refresh")
-
-with tab2:
-    st.subheader("🔥 Auto Meme Coin Snipes")
-    st.caption("AI automatically buys and sells based on edge detection")
-
-    meme_data = [
-        ("$PEPE", 0.00001234, 1240000, 45.2),
-        ("$BONK", 0.00002345, 890000, 32.1),
-        ("$WIF", 2.34, 670000, 18.9),
-        ("$GROK", 8.45, 450000, 67.8),
-    ]
-
-    for name, price, volume, edge in meme_data:
-        with st.container():
-            st.markdown('<div class="card edge">', unsafe_allow_html=True)
-            c1, c2, c3, c4 = st.columns([2, 1.5, 1.5, 1.5])
-            c1.write(f"**{name}** — ${price}")
-            c2.metric("Volume", f"${volume:,}")
-            c3.metric("Edge", f"+{edge:.1f}%")
-            if c4.button("🚀 MANUAL SNIPE", key=name):
-                st.session_state.balance += 200 * 0.75
-                st.session_state.pnl_history.append(st.session_state.balance)
-                st.session_state.trades.append({"time": datetime.now().strftime("%H:%M"), "market": name, "size": 200})
-                st.success(f"Manual snipe executed ${200} {name}")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-with tab3:
-    st.subheader("Polymarket Edges")
-    st.info("BTC 5-min Down — Edge +28% (High confidence)")
-
-with tab4:
-    st.subheader("💱 Spot Crypto Trading")
-    symbol = st.selectbox("Asset", ["BTC", "ETH", "SOL"])
-    amount = st.number_input("Amount ($)", min_value=10, value=100)
-    colA, colB = st.columns(2)
-    if colA.button(f"BUY {symbol}"):
-        if st.session_state.balance >= amount:
-            st.session_state.balance -= amount
-            st.session_state.pnl_history.append(st.session_state.balance)
-            st.success(f"Bought ${amount} {symbol}")
-    if colB.button(f"SELL {symbol}"):
-        st.session_state.balance += amount * 1.02
-        st.session_state.pnl_history.append(st.session_state.balance)
-        st.success(f"Sold ${amount} {symbol}")
-
-with tab5:
-    st.subheader("📈 Performance")
+with col_center:  # Main Live Chart
+    st.subheader("📈 Live Price Chart (Real-Time)")
+    # Live chart with simulated price movement
     fig = go.Figure()
-    fig.add_trace(go.Scatter(y=st.session_state.pnl_history, mode='lines+markers', line=dict(color='#67e8f9', width=4)))
-    fig.update_layout(height=520, template="plotly_dark", paper_bgcolor="#05080f")
+    x = pd.date_range(datetime.now(), periods=50, freq="1min")
+    y = [65000 + random.randint(-500, 500) for _ in range(50)]
+    fig.add_trace(go.Scatter(x=x, y=y, mode='lines', line=dict(color='#67e8f9', width=3)))
+    fig.update_layout(height=520, template="plotly_dark", paper_bgcolor="#05080f", margin=dict(l=0, r=0, t=0, b=0))
     st.plotly_chart(fig, use_container_width=True)
 
-    if st.session_state.trades:
-        st.subheader("Recent Auto Trades")
-        df = pd.DataFrame(st.session_state.trades)
-        st.dataframe(df, use_container_width=True)
+    # Auto Trade Status
+    if st.session_state.auto_trade:
+        st.success("🤖 AI AUTO-TRADING ACTIVE — Buying & Selling without you")
+        # Simulate auto trade
+        if random.random() < 0.3:  # random chance on refresh
+            size = random.randint(80, 250)
+            market = random.choice(["$PEPE", "$BONK", "$WIF"])
+            action = random.choice(["BUY", "SELL"])
+            if action == "BUY":
+                st.session_state.balance -= size
+            else:
+                st.session_state.balance += size * 1.15
+            st.session_state.pnl_history.append(st.session_state.balance)
+            st.session_state.trades.append({"time": datetime.now().strftime("%H:%M:%S"), "market": market, "action": action, "size": size})
+            st.success(f"🤖 AI Auto-{action} ${size} {market}")
+
+with col_right:  # Positions & Order Entry
+    st.subheader("📍 Positions")
+    st.markdown('<div class="panel">BTC 5m Up +$450</div>', unsafe_allow_html=True)
+    st.markdown('<div class="panel">ETH 5m Down +$320</div>', unsafe_allow_html=True)
+
+    st.subheader("Order Entry")
+    symbol = st.selectbox("Symbol", ["BTC 5m Up", "ETH 5m Down", "$PEPE", "$BONK"])
+    size = st.number_input("Size ($)", min_value=50, value=200)
+    colA, colB = st.columns(2)
+    if colA.button("🚀 BUY"):
+        st.session_state.balance -= size
+        st.session_state.pnl_history.append(st.session_state.balance)
+        st.success(f"BUY executed ${size}")
+    if colB.button("💀 SELL"):
+        st.session_state.balance += size * 1.15
+        st.session_state.pnl_history.append(st.session_state.balance)
+        st.success(f"SELL executed ${size}")
+
+# Bottom Section - All Live Data
+st.subheader("🌍 World Risk & Global Data")
+st.info("Middle East escalation • Red Sea disruptions • Oil volatility high")
+
+st.subheader("Recent Trades")
+if st.session_state.trades:
+    df = pd.DataFrame(st.session_state.trades)
+    st.dataframe(df, use_container_width=True)
 
 # Sidebar
 st.sidebar.title("Controls")
 st.sidebar.toggle("Full Auto Mode (AI Buys & Sells Without You)", value=st.session_state.auto_trade)
-st.sidebar.caption("Burner wallet only • AI fully autonomous when enabled")
+st.sidebar.toggle("Live Mode (Auto Refresh Every 5s)", value=False, key="live_mode")
 
-if st.button("Refresh Terminal (AI Scans & Trades)"):
+if st.sidebar.button("Refresh Terminal"):
+    st.rerun()
+
+# Live Mode
+if st.session_state.live_mode:
+    time.sleep(5)
     st.rerun()
