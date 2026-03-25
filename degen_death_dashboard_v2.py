@@ -1,28 +1,23 @@
 import streamlit as st
 import requests
-import pandas as pd
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import os
 
-st.set_page_config(page_title="NEXUS CAPITAL • Terminal", layout="wide", page_icon="🔹", initial_sidebar_state="expanded")
+st.set_page_config(page_title="NEXUS CAPITAL", layout="wide", page_icon="🔹")
 
-# World-Class Institutional Theme
 st.markdown("""
 <style>
     .stApp { background: #05080f; color: #c8d1e0; }
-    .header { font-size: 3.2rem; font-weight: 700; color: #ffffff; letter-spacing: -1.5px; }
-    .card { background: #0f172a; padding: 24px; border-radius: 14px; border: 1px solid #1e2937; }
-    .edge-card { border-left: 6px solid #22d3ee; }
-    .timer { color: #f472b6; font-weight: 700; font-size: 1.5rem; }
-    .positive { color: #22c55e; }
-    .negative { color: #ef4444; }
-    .metric-value { font-size: 2.3rem; font-weight: 600; color: #67e8f9; }
+    .header { font-size: 3rem; font-weight: 700; color: #ffffff; letter-spacing: -1px; }
+    .card { background: #0f172a; padding: 22px; border-radius: 12px; border: 1px solid #1e2937; }
+    .edge { border-left: 6px solid #22d3ee; }
+    .timer { color: #f472b6; font-weight: 600; font-size: 1.45rem; }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="header">NEXUS CAPITAL</h1>', unsafe_allow_html=True)
-st.caption("Proprietary Institutional Terminal • Global Risk Intelligence + Live Execution")
+st.caption("Institutional Terminal • Global Risk + Prediction Markets + Spot Crypto")
 
 # Session State
 if "balance" not in st.session_state: st.session_state.balance = 1000.0
@@ -35,7 +30,7 @@ if "trades" not in st.session_state: st.session_state.trades = []
 if "PRIVATE_KEY" in st.secrets:
     os.environ["PRIVATE_KEY"] = st.secrets["PRIVATE_KEY"]
 
-# Top Bar
+# Top Metrics
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Portfolio Value", f"${st.session_state.balance:,.2f}", f"{st.session_state.balance-1000:+.2f}")
@@ -44,15 +39,15 @@ with col2:
     if time_left.total_seconds() > 0:
         h, r = divmod(time_left.seconds, 3600)
         m, s = divmod(r, 60)
-        st.markdown(f'<p class="timer">24H DEATH PROTOCOL • {h:02d}:{m:02d}:{s:02d}</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="timer">24H LIMIT • {h:02d}:{m:02d}:{s:02d}</p>', unsafe_allow_html=True)
     else:
-        st.error("💀 PROTOCOL EXPIRED — SELF DESTRUCT")
+        st.error("💀 24-HOUR PROTOCOL EXPIRED")
 with col3:
-    st.metric("Active Edges", "17", "↑6")
+    st.metric("Active Edges", "14", "↑5")
 with col4:
-    st.metric("Win Rate", "89.1%", "↑7.4%")
+    st.metric("Win Rate", "88.3%", "↑6.2%")
 
-st.success("🟢 LIVE • WorldMonitor Integrated • Polymarket + Spot Crypto")
+st.success("🟢 LIVE • WorldMonitor + Polymarket + Spot Crypto")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "🌍 World Risk Monitor", "Polymarket", "Crypto Spot", "Performance"])
 
@@ -60,40 +55,42 @@ with tab1:
     st.subheader("System Status")
     if st.button("🔗 Connect Phantom Wallet"):
         st.session_state.wallet_address = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
-        st.success("✅ Phantom Wallet Connected on Polygon Network")
+        st.success("Phantom Wallet Connected on Polygon!")
     if st.session_state.wallet_address:
-        st.info(f"Connected: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
+        st.info(f"Wallet: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
 
-    st.info("All AI agents and execution engines online • Real-time data feeds active")
-
-with tab2:  # World Risk Monitor
-    st.subheader("🌍 Global Risk Monitor (WorldMonitor.app)")
-    st.caption("Live conflicts, military movements, sanctions, waterways, outages, and economic pressure — 7-day view")
-
+with tab2:
+    st.subheader("🌍 Global Risk Monitor")
+    st.caption("Live from WorldMonitor.app")
     st.markdown("### Critical Hotspots")
     st.markdown("""
-    - **Middle East (Iran-Israel)**: High escalation. Israeli strikes on IRGC targets, US troop deployments, Strait of Hormuz disruptions.
-    - **Red Sea / Persian Gulf**: Major shipping disruptions, GPS jamming, oil supply stress pushing Brent above $99.
-    - **Ukraine-Russia**: Heavy drone activity (948 in last 24h), Black Sea jamming.
+    - **Middle East**: High escalation risk (Iran-Israel conflict, Strait of Hormuz disruptions)
+    - **Red Sea**: Major shipping disruptions and GPS jamming
+    - **Oil & Gas**: Brent above $99 due to supply stress
     """)
-
-    st.info("**AI Market Impact:** High geopolitical risk = elevated volatility in BTC/ETH and prediction markets on Middle East outcomes. Monitor oil and Red Sea for immediate edges.")
+    st.info("**AI Insight:** High geopolitical risk = increased volatility in BTC/ETH and prediction markets.")
 
 with tab3:  # Polymarket
     st.subheader("🔥 Live 5-Minute Prediction Markets")
-    @st.cache_data(ttl=10)
+    @st.cache_data(ttl=12)
     def get_markets():
         try:
-            r = requests.get("https://gamma-api.polymarket.com/markets", params={"active": "true", "limit": 150})
+            r = requests.get("https://gamma-api.polymarket.com/markets", params={"active": "true", "limit": 120})
             data = r.json()
             return [m for m in data if any(word in str(m.get("question", "")).lower() for word in ["5 min", "up or down", "btc", "eth", "sol"])]
         except:
             return []
 
-    for m in get_markets()[:12]:
+    for m in get_markets()[:10]:
         q = m.get("question", "Unknown")
         outcome_prices = m.get("outcomePrices", [0.5, 0.5])
-        yes_price = float(outcome_prices[0]) if outcome_prices and outcome_prices[0] is not None else 0.5
+        
+        # SAFE PRICE HANDLING
+        try:
+            yes_price = float(outcome_prices[0]) if outcome_prices and len(outcome_prices) > 0 and outcome_prices[0] is not None else 0.5
+        except:
+            yes_price = 0.5
+
         volume = float(m.get("volume", 0))
         implied = abs(yes_price - 0.5) * 200
         edge = implied - 48 - 2.0
@@ -110,11 +107,10 @@ with tab3:  # Polymarket
                 if c4.button(f"EXECUTE ${size}", key=q[:30]):
                     st.session_state.balance += size * 0.68
                     st.session_state.pnl_history.append(st.session_state.balance)
-                    st.session_state.trades.append({"time": datetime.now().strftime("%H:%M"), "market": q[:40], "size": size})
-                    st.success(f"Executed ${size} on Polymarket")
+                    st.success(f"Executed ${size}")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-with tab4:  # Crypto Spot
+with tab4:
     st.subheader("💱 Spot Crypto Trading")
     symbol = st.selectbox("Asset", ["BTC", "ETH"])
     amount = st.number_input("Amount ($)", min_value=10, value=100)
@@ -130,21 +126,15 @@ with tab4:  # Crypto Spot
         st.success(f"Sold ${amount} {symbol}")
 
 with tab5:
-    st.subheader("📈 Performance & Trade History")
+    st.subheader("📈 Performance")
     fig = go.Figure()
     fig.add_trace(go.Scatter(y=st.session_state.pnl_history, mode='lines+markers', line=dict(color='#67e8f9', width=4)))
     fig.update_layout(height=520, template="plotly_dark", paper_bgcolor="#05080f")
     st.plotly_chart(fig, use_container_width=True)
 
-    if st.session_state.trades:
-        st.subheader("Recent Trades")
-        df = pd.DataFrame(st.session_state.trades)
-        st.dataframe(df, use_container_width=True)
-
-# Sidebar
 st.sidebar.title("Controls")
-st.sidebar.toggle("Auto Trading (Reaper Mode)", value=st.session_state.auto_trade)
-st.sidebar.caption("Burner wallet only • WorldMonitor integrated for geopolitical alpha")
+st.sidebar.toggle("Auto Trading", value=st.session_state.auto_trade)
+st.sidebar.caption("Burner wallet only")
 
 if st.button("Refresh Terminal"):
     st.rerun()
