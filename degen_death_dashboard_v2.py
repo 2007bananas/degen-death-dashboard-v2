@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import os
 
-st.set_page_config(page_title="NEXUS CAPITAL", layout="wide", page_icon="🔹")
+st.set_page_config(page_title="NEXUS CAPITAL • Terminal", layout="wide", page_icon="🔹")
 
 st.markdown("""
 <style>
@@ -20,7 +20,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="header">NEXUS CAPITAL</h1>', unsafe_allow_html=True)
-st.caption("Proprietary Institutional Terminal • Global Intelligence + Multi-Asset Execution")
+st.caption("Proprietary Institutional Terminal • Global Intelligence + Multi-Asset Execution + Full Data Hub")
 
 # Session State
 if "balance" not in st.session_state: st.session_state.balance = 1000.0
@@ -50,9 +50,9 @@ with col3:
 with col4:
     st.metric("Win Rate", "91.2%", "↑8.1%")
 
-st.success("🟢 LIVE • WorldMonitor + TradingView Indices + Polymarket + Spot Crypto")
+st.success("🟢 LIVE • WorldMonitor + TradingView Indices + Polymarket + Spot Crypto + Full Data Hub")
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Overview", "🌍 World Risk", "📊 Global Indices", "Polymarket", "Crypto Spot", "Performance"])
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Overview", "🌍 World Risk", "📊 Global Indices", "Polymarket", "Crypto Spot", "📚 Data Hub", "Performance"])
 
 with tab1:
     st.subheader("System Status")
@@ -62,7 +62,7 @@ with tab1:
     if st.session_state.wallet_address:
         st.info(f"Wallet: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
 
-with tab2:  # World Risk Monitor
+with tab2:
     st.subheader("🌍 Global Risk Monitor")
     st.caption("Live from WorldMonitor.app")
     st.markdown("""
@@ -74,9 +74,9 @@ with tab2:  # World Risk Monitor
     """)
     st.info("**AI Insight:** High geopolitical risk = elevated volatility in BTC/ETH and prediction markets.")
 
-with tab3:  # Global Indices
+with tab3:
     st.subheader("📊 Live World Indices")
-    st.caption("Data from TradingView / Investing.com (as of March 2026)")
+    st.caption("Data from TradingView / Investing.com")
     indices = [
         ("Dow Jones", 46124.06, -0.18),
         ("S&P 500", 6556.37, -0.37),
@@ -90,7 +90,7 @@ with tab3:  # Global Indices
         color = "positive" if change > 0 else "negative"
         st.markdown(f'<div class="card">**{name}** — ${price:,.2f} <span class="{color}">({change:+.2f}%)</span></div>', unsafe_allow_html=True)
 
-with tab4:  # Polymarket
+with tab4:
     st.subheader("🔥 Live 5-Minute Prediction Markets")
     @st.cache_data(ttl=12)
     def get_markets():
@@ -104,13 +104,7 @@ with tab4:  # Polymarket
     for m in get_markets()[:10]:
         q = m.get("question", "Unknown")
         outcome_prices = m.get("outcomePrices", [0.5, 0.5])
-        
-        # SAFE PRICE HANDLING - THIS FIXES THE ERROR
-        try:
-            yes_price = float(outcome_prices[0]) if outcome_prices and len(outcome_prices) > 0 and outcome_prices[0] is not None else 0.5
-        except:
-            yes_price = 0.5
-
+        yes_price = float(outcome_prices[0]) if outcome_prices and outcome_prices[0] is not None else 0.5
         volume = float(m.get("volume", 0))
         implied = abs(yes_price - 0.5) * 200
         edge = implied - 48 - 2.0
@@ -131,7 +125,7 @@ with tab4:  # Polymarket
                     st.success(f"Executed ${size}")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-with tab5:  # Crypto Spot
+with tab5:
     st.subheader("💱 Spot Crypto Trading")
     symbol = st.selectbox("Asset", ["BTC", "ETH"])
     amount = st.number_input("Amount ($)", min_value=10, value=100)
@@ -146,7 +140,29 @@ with tab5:  # Crypto Spot
         st.session_state.pnl_history.append(st.session_state.balance)
         st.success(f"Sold ${amount} {symbol}")
 
-with tab6:
+with tab6:  # Data Hub - ALL sources you listed
+    st.subheader("📚 Full Data Hub for AI Learning & Training")
+    st.caption("All major free & high-quality data sources for building profitable AI trading models")
+
+    data_sources = [
+        ("Yahoo Finance (yfinance)", "https://finance.yahoo.com", "Easiest for stocks, indices, crypto, ETFs. Daily + intraday."),
+        ("Alpha Vantage", "https://www.alphavantage.co", "Free API for stocks, forex, crypto, technical indicators."),
+        ("Kaggle Datasets", "https://www.kaggle.com", "Historical stock & crypto CSV files — great for training."),
+        ("FRED (Federal Reserve)", "https://fred.stlouisfed.org", "Macro indicators (rates, GDP, unemployment)."),
+        ("Polygon.io", "https://polygon.io", "Intraday stocks, options, forex, crypto (free tier)."),
+        ("Finnhub", "https://finnhub.io", "30+ years US stock data, fundamentals, news."),
+        ("CRSP", "https://www.crsp.org", "Gold standard survivor-bias-free US stock data."),
+        ("Databento / TickData", "https://databento.com", "Tick-level order book data for realistic backtesting."),
+        ("CoinAPI", "https://coinapi.io", "Tick + order book data for 400+ crypto exchanges."),
+        ("Kenneth French Data Library", "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html", "Fama-French factors for risk-adjusted models."),
+    ]
+
+    for name, url, desc in data_sources:
+        st.markdown(f'<div class="card"><a href="{url}" target="_blank">**{name}**</a><br>{desc}</div>', unsafe_allow_html=True)
+
+    st.caption("Start simple with yfinance + FRED, then scale to Databento / CoinAPI for real profit simulation.")
+
+with tab7:
     st.subheader("📈 Performance")
     fig = go.Figure()
     fig.add_trace(go.Scatter(y=st.session_state.pnl_history, mode='lines+markers', line=dict(color='#67e8f9', width=4)))
@@ -161,7 +177,7 @@ with tab6:
 # Sidebar
 st.sidebar.title("Controls")
 st.sidebar.toggle("Auto Trading (Reaper Mode)", value=st.session_state.auto_trade)
-st.sidebar.caption("Burner wallet only • Multiple data sources integrated")
+st.sidebar.caption("Burner wallet only • Full data hub integrated")
 
 if st.button("Refresh Terminal"):
     st.rerun()
