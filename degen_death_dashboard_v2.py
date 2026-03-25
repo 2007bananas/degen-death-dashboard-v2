@@ -104,7 +104,13 @@ with tab4:
     for m in get_markets()[:10]:
         q = m.get("question", "Unknown")
         outcome_prices = m.get("outcomePrices", [0.5, 0.5])
-        yes_price = float(outcome_prices[0]) if outcome_prices and outcome_prices[0] is not None else 0.5
+        
+        # SAFE PRICE HANDLING - THIS FIXES THE ERROR
+        try:
+            yes_price = float(outcome_prices[0]) if outcome_prices and len(outcome_prices) > 0 and outcome_prices[0] is not None else 0.5
+        except:
+            yes_price = 0.5
+
         volume = float(m.get("volume", 0))
         implied = abs(yes_price - 0.5) * 200
         edge = implied - 48 - 2.0
