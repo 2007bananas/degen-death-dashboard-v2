@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import os
 
-st.set_page_config(page_title="NEXUS CAPITAL • Terminal", layout="wide", page_icon="🔹", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="NEXUS CAPITAL • Terminal", layout="wide", page_icon="🔹")
 
 st.markdown("""
 <style>
-    .stApp { background: #0a0f1c; color: #e0f2fe; }
-    .header { font-size: 2.8rem; font-weight: 700; color: #67e8f9; letter-spacing: -1px; }
+    .stApp { background: #05080f; color: #c8d1e0; }
+    .header { font-size: 3rem; font-weight: 700; color: #ffffff; letter-spacing: -1px; }
     .panel { background: #1e2937; padding: 18px; border-radius: 10px; border: 1px solid #334155; }
     .edge { border-left: 5px solid #22d3ee; }
     .timer { color: #f472b6; font-weight: 700; font-size: 1.4rem; }
@@ -18,7 +18,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="header">NEXUS CAPITAL</h1>', unsafe_allow_html=True)
-st.caption("Institutional Multi-Asset Terminal • Live Execution")
+st.caption("Institutional Multi-Asset Terminal • Live Execution + Global Intelligence")
 
 # Session State
 if "balance" not in st.session_state: st.session_state.balance = 1000.0
@@ -57,7 +57,7 @@ if st.session_state.wallet_address:
 
 st.success("🟢 LIVE • Polymarket + Spot Crypto + Global Risk")
 
-# Multi-Panel Layout (like your Devexperts screenshot)
+# Multi-Panel Layout (like your screenshots)
 col_left, col_center, col_right = st.columns([1.2, 2.8, 1.2])
 
 with col_left:  # Watch List
@@ -78,7 +78,7 @@ with col_center:  # Main Charting
     fig.update_layout(height=520, template="plotly_dark", paper_bgcolor="#0a0f1c")
     st.plotly_chart(fig, use_container_width=True)
 
-    # Order Entry Panel (like your screenshot)
+    # Order Entry (professional style)
     st.subheader("Order Entry")
     symbol = st.selectbox("Symbol", ["BTC 5m Up", "ETH 5m Down", "BTC/USD"])
     size = st.number_input("Size ($)", min_value=50, value=200)
