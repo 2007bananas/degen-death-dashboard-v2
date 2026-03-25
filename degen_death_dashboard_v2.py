@@ -1,5 +1,5 @@
 # --------------------------------------------------------------
-# NEXUS CAPITAL – REAL AUTO-TRADER WITH PHANTOM WALLET INTEGRATION
+# NEXUS CAPITAL – ETHEREUM AUTO-TRADER WITH META MASK INTEGRATION
 # --------------------------------------------------------------
 import streamlit as st
 import requests, pandas as pd, random, time, os
@@ -30,36 +30,54 @@ if "ai" not in st.session_state:
     }
 if "wallet_address" not in st.session_state:
     st.session_state.wallet_address = None
+if "chain_id" not in st.session_state:
+    st.session_state.chain_id = None
 
 # ------------------------------------------------------------------
-# PHANTOM WALLET INTEGRATION (FIXED - NO DEPENDENCIES)
+# META MASK INTEGRATION (NO EXTERNAL DEPENDENCIES)
 # ------------------------------------------------------------------
-def connect_phantom():
-    """Connects to Phantom wallet and returns public key (or None)"""
+def connect_metamask():
+    """Connects to MetaMask wallet and returns public key (or None)"""
     # Create a hidden iframe that executes JavaScript
     components.html(
         """
-        <div id="phantom-connection" style="display:none">
+        <div id="metamask-connection" style="display:none">
             <script>
                 async function connectWallet() {
-                    if (window.solana && window.solana.isPhantom) {
+                    if (typeof window.ethereum !== 'undefined') {
                         try {
-                            const response = await window.solana.connect();
-                            const pubkey = response.publicKey.toString();
+                            // Request account access
+                            const accounts = await window.ethereum.request({
+                                method: 'eth_requestAccounts'
+                            });
+                            const account = accounts[0];
+                            const chainId = await window.ethereum.request({
+                                method: 'eth_chainId'
+                            });
+                            
                             // Send result to Streamlit
-                            const event = new CustomEvent('streamlit:phantomConnect', {
-                                detail: { publicKey: pubkey }
+                            const event = new CustomEvent('streamlit:metamaskConnect', {
+                                detail: { 
+                                    publicKey: account,
+                                    chainId: chainId
+                                }
                             });
                             window.parent.dispatchEvent(event);
                         } catch (err) {
-                            const event = new CustomEvent('streamlit:phantomConnect', {
-                                detail: { publicKey: null, error: "Connection canceled" }
+                            const event = new CustomEvent('streamlit:metamaskConnect', {
+                                detail: { 
+                                    publicKey: null, 
+                                    error: "Connection canceled or failed"
+                                }
                             });
                             window.parent.dispatchEvent(event);
                         }
                     } else {
-                        const event = new CustomEvent('streamlit:phantomConnect', {
-                            detail: { publicKey: "phantom_not_installed", error: "Phantom not detected" }
+                        const event = new CustomEvent('streamlit:metamaskConnect', {
+                            detail: { 
+                                publicKey: "metamask_not_installed", 
+                                error: "MetaMask not detected"
+                            }
                         });
                         window.parent.dispatchEvent(event);
                     }
@@ -72,9 +90,9 @@ def connect_phantom():
     )
 
     # Check if we have a response from the iframe
-    if "phantom_response" in st.session_state:
-        response = st.session_state.phantom_response
-        del st.session_state.phantom_response
+    if "metamask_response" in st.session_state:
+        response = st.session_state.metamask_response
+        del st.session_state.metamask_response
         return response
     return None
 
@@ -82,7 +100,7 @@ def connect_phantom():
 components.html(
     """
     <script>
-        window.addEventListener('streamlit:phantomConnect', function(event) {
+        window.addEventListener('streamlit:metamaskConnect', function(event) {
             const response = event.detail;
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
@@ -90,7 +108,7 @@ components.html(
             document.body.appendChild(iframe);
             
             iframe.contentWindow.postMessage({
-                type: 'streamlit:phantomConnect',
+                type: 'streamlit:metamaskConnect',
                 data: response
             }, '*');
         });
@@ -100,18 +118,18 @@ components.html(
 )
 
 # Set up a listener for the iframe communication
-if "phantom_event" not in st.session_state:
-    st.session_state.phantom_event = None
+if "metamask_event" not in st.session_state:
+    st.session_state.metamask_event = None
 
 # Check for messages from the iframe
-if "streamlit:phantomConnect" in st.query_params:
-    st.session_state.phantom_response = st.query_params["streamlit:phantomConnect"]
+if "streamlit:metamaskConnect" in st.query_params:
+    st.session_state.metamask_response = st.query_params["streamlit:metamaskConnect"]
     st.query_params.clear()
 
 # ------------------------------------------------------------------
 # Page layout
 # ------------------------------------------------------------------
-st.set_page_config(page_title="NEXUS CAPITAL – Ultra Auto-Trader",
+st.set_page_config(page_title="NEXUS CAPITAL – Ethereum Auto-Trader",
                    layout="wide", page_icon="🚀")
 st.markdown("""
 <style>
@@ -123,11 +141,12 @@ st.markdown("""
     .timer{color:#f472b6;font-weight:700;font-size:1.45rem;}
     .wallet-connected {color: #22d3ee; font-weight: bold;}
     .wallet-disconnected {color: #fca5a5; font-weight: bold;}
+    .eth-wallet {background: #627EEA; padding: 2px 6px; border-radius: 4px; font-weight: bold;}
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="header">NEXUS CAPITAL</h1>', unsafe_allow_html=True)
-st.caption("1:30 R:R Auto-Trader | Self-Learning AI | Live Meme-Coin Feed")
+st.caption("Ethereum Auto-Trader | Self-Learning AI | Live Meme-Coin Feed")
 
 # ------------------------------------------------------------------
 # Top bar metrics
@@ -146,40 +165,52 @@ c3.metric("Active Snipes", "—")
 c4.metric("Win Rate", f"{st.session_state.ai['win_rate']*100:.1f}%")
 
 # ------------------------------------------------------------------
-# Phantom wallet connection (FIXED)
+# MetaMask wallet connection
 # ------------------------------------------------------------------
 if st.session_state.wallet_address:
-    st.info(f'<span class="wallet-connected">Connected wallet:</span> {st.session_state.wallet_address[:8]}…{st.session_state.wallet_address[-6:]}', 
+    chain_name = {
+        "0x1": "Ethereum Mainnet",
+        "0x3": "Ropsten Testnet",
+        "0x4": "Rinkeby Testnet",
+        "0x5": "Goerli Testnet",
+        "0xa": "Optimism",
+        "0x64": "Gnosis Chain",
+        "0x89": "Polygon",
+        "0xa4b1": "Arbitrum"
+    }.get(st.session_state.chain_id, st.session_state.chain_id)
+    
+    st.info(f'<span class="wallet-connected">Connected wallet:</span> <span class="eth-wallet">ETH</span> {st.session_state.wallet_address[:8]}…{st.session_state.wallet_address[-6:]} on {chain_name}', 
             unsafe_allow_html=True)
 else:
     st.info("Wallet not connected - trading disabled", icon="⚠️")
 
-if st.button("🔗 Connect Phantom Wallet"):
+if st.button("🔗 Connect MetaMask Wallet"):
     # Clear any previous response
-    if "phantom_response" in st.session_state:
-        del st.session_state.phantom_response
+    if "metamask_response" in st.session_state:
+        del st.session_state.metamask_response
     
     # Trigger the connection process
-    connect_phantom()
+    connect_metamask()
     
     # Check if we have a response
-    if "phantom_response" in st.session_state:
-        response = st.session_state.phantom_response
-        del st.session_state.phantom_response
+    if "metamask_response" in st.session_state:
+        response = st.session_state.metamask_response
+        del st.session_state.metamask_response
         
-        if response == "phantom_not_installed":
-            st.error("⚠️ Phantom Wallet not detected! Install it from https://phantom.app")
-        elif response:
-            st.session_state.wallet_address = response
-            st.success(f"✅ Connected: {response}")
+        if response == "metamask_not_installed":
+            st.error("⚠️ MetaMask not detected! Install it from https://metamask.io")
+        elif response and "publicKey" in response:
+            st.session_state.wallet_address = response["publicKey"]
+            st.session_state.chain_id = response.get("chainId", "Unknown")
+            st.success(f"✅ Connected to {st.session_state.wallet_address}")
         else:
             st.warning("Connection canceled or failed")
 
 # ------------------------------------------------------------------
-# Helper: pull cheap meme-coins from DexScreener
+# Helper: pull cheap meme-coins from DexScreener (Ethereum focused)
 # ------------------------------------------------------------------
 @st.cache_data(ttl=30)
-def fetch_meme_coins(chain: str = "solana"):
+def fetch_meme_coins(chain: str = "ethereum"):
     """Return a short list of low-price tokens with volume edge."""
     url = f"https://api.dexscreener.com/latest/dex/pairs?chain={chain}"
     try:
@@ -202,8 +233,8 @@ def fetch_meme_coins(chain: str = "solana"):
         # fallback demo data if the API is unreachable
         return [
             {"name":"PEPE","price":0.000012,"volume":1_240_000,"edge":0.24},
-            {"name":"BONK","price":0.000023,"volume":890_000,"edge":-0.11},
-            {"name":"WIF","price":2.34,"volume":670_000,"edge":-0.33},
+            {"name":"SHIB","price":0.000023,"volume":890_000,"edge":-0.11},
+            {"name":"DOGE","price":0.067,"volume":670_000,"edge":-0.33},
         ]
 
 # ------------------------------------------------------------------
@@ -213,7 +244,7 @@ col_left, col_center, col_right = st.columns([1.2, 2.8, 1.2])
 
 with col_left:
     st.subheader("📋 Watch-List (DexScreener)")
-    meme = fetch_meme_coins()
+    meme = fetch_meme_coins("ethereum")
     for t in meme[:10]:
         st.markdown(
             f'<div class="card edge"><b>{t["name"]}</b> @ ${t["price"]:.6f} '
@@ -227,7 +258,7 @@ with col_center:
     st.subheader("📈 Live Price Chart")
     # Simple random-walk (replace with real feed later)
     x = pd.date_range(datetime.now(), periods=60, freq="1min")
-    y = [65_000 + random.randint(-400, 400) for _ in range(60)]
+    y = [2500 + random.randint(-50, 50) for _ in range(60)]  # ETH price
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=x, y=y, mode="lines",
                              line=dict(color="#67e8f9", width=3)))
@@ -236,36 +267,37 @@ with col_center:
     st.plotly_chart(fig, use_container_width=True)
 
     st.subheader("🛒 Order Entry")
-    symbol = st.selectbox("Symbol", ["BTC 5m Up", "ETH 5m Down",
-                                    "$PEPE", "$BONK", "$WIF"])
+    symbol = st.selectbox("Symbol", ["ETH", "BTC", "SHIB", "PEPE", "DOGE"])
     size = st.number_input("Size ($)", min_value=50, value=200)
     col_a, col_b = st.columns(2)
     
     # BUY button with real trading
     if col_a.button("🚀 BUY"):
         if st.session_state.get("wallet_address"):
-            st.warning("⚠️ Trading is currently simulated. To execute real trades, replace the placeholder with actual swap logic.")
-            # In a real implementation, you would:
-            # 1. Call your backend to get a swap transaction
-            # 2. Have the user sign it via Phantom
-            # 3. Broadcast the signed transaction
+            st.warning("⚠️ Trading is currently simulated. To execute real trades:")
+            st.info("1. Connect to an Ethereum RPC provider (e.g., Alchemy, Infura)")
+            st.info("2. Sign and broadcast transactions via web3.js")
+            st.info("3. Monitor for transaction confirmation")
             
-            # For now, we simulate the trade
+            # Simulate the trade
             st.session_state.balance -= size
             st.session_state.pnl_history.append(st.session_state.balance)
-            st.success(f"BUY ${size}")
+            st.success(f"BUY ${size} (simulated)")
         else:
             st.warning("Connect wallet first!")
     
     # SELL button (simplified)
     if col_b.button("💀 SELL"):
         if st.session_state.get("wallet_address"):
-            st.warning("⚠️ Trading is currently simulated. To execute real trades, replace the placeholder with actual swap logic.")
+            st.warning("⚠️ Trading is currently simulated. To execute real trades:")
+            st.info("1. Connect to an Ethereum RPC provider (e.g., Alchemy, Infura)")
+            st.info("2. Sign and broadcast transactions via web3.js")
+            st.info("3. Monitor for transaction confirmation")
             
             # Simulate the trade
             st.session_state.balance += size
             st.session_state.pnl_history.append(st.session_state.balance)
-            st.success(f"SELL ${size}")
+            st.success(f"SELL ${size} (simulated)")
         else:
             st.warning("Connect wallet first!")
 
@@ -274,11 +306,11 @@ with col_center:
 # ------------------------------------------------------------------
 with col_right:
     st.subheader("📍 Positions")
-    st.markdown('<div class="card">BTC 5m Up + $450</div>', unsafe_allow_html=True)
-    st.markdown('<div class="card">ETH 5m Down + $320</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card">ETH Long + $450</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card">SHIB Long + $320</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------
-# ----------   AUTO-TRADER (1:30 Kelly)   -------------------------
+# ----------   SELF-LEARNING AI (1:30 Kelly)   --------------------
 # ------------------------------------------------------------------
 def kelly_fraction(win_rate: float, reward: float = 30.0) -> float:
     """Kelly optimal fraction of bankroll (clamped 0.1 % - 10 %)."""
@@ -366,16 +398,16 @@ with tab_ai:
 with tab_hub:
     st.subheader("Data Sources (quick links)")
     sources = [
-        ("DexScreener", "https://dexscreener.com/"),
-        ("Polymarket", "https://polymarket.com/"),
-        ("WorldMonitor.app", "https://worldmonitor.app/"),
+        ("Etherscan", "https://etherscan.io/"),
+        ("DexScreener", "https://dexscreener.com/ethereum"),
+        ("Uniswap", "https://uniswap.org/"),
+        ("MetaMask", "https://metamask.io/"),
+        ("Alchemy", "https://www.alchemy.com/"),
+        ("Infura", "https://www.infura.io/"),
         ("TradingView", "https://tradingview.com/"),
-        ("Yahoo Finance / yfinance", "https://finance.yahoo.com/"),
-        ("Alpha Vantage", "https://www.alphavantage.co/"),
+        ("CoinGecko", "https://www.coingecko.com/"),
+        ("CoinMarketCap", "https://coinmarketcap.com/"),
         ("Kaggle Datasets", "https://www.kaggle.com/datasets"),
-        ("FRED", "https://fred.stlouisfed.org/"),
-        ("Polygon.io", "https://polygon.io/"),
-        ("Finnhub", "https://finnhub.io/"),
     ]
     for name, link in sources:
         st.markdown(f"• [{name}]({link})")
