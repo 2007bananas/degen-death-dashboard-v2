@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import os
 import time
 
-st.set_page_config(page_title="NEXUS CAPITAL • Auto Sniper", layout="wide", page_icon="🔥")
+st.set_page_config(page_title="NEXUS CAPITAL • Full Auto Terminal", layout="wide", page_icon="🔥")
 
 st.markdown("""
 <style>
@@ -15,12 +15,11 @@ st.markdown("""
     .card { background: #0f172a; padding: 22px; border-radius: 12px; border: 1px solid #1e2937; }
     .edge { border-left: 6px solid #22d3ee; }
     .timer { color: #f472b6; font-weight: 700; font-size: 1.45rem; }
-    .snipe { background: #22c55e; color: black; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="header">NEXUS CAPITAL</h1>', unsafe_allow_html=True)
-st.caption("Auto Sniper Terminal • Meme Coins + Polymarket + Global Risk")
+st.caption("Full Auto Sniper Terminal • AI Buys & Sells Without You")
 
 # Session State
 if "balance" not in st.session_state: st.session_state.balance = 1000.0
@@ -57,29 +56,41 @@ if st.button("🔗 Connect Phantom Wallet"):
 if st.session_state.wallet_address:
     st.info(f"Connected: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
 
-st.success("🟢 LIVE • Auto Sniper Mode Ready")
+st.success("🟢 LIVE • Full Auto Mode Ready")
+
+# Auto Trading Logic
+if st.session_state.auto_trade:
+    st.warning("🚀 FULL AUTO MODE ACTIVE — AI is buying and selling without you")
+    # Simulate AI scanning and auto-trading
+    if len(st.session_state.trades) < 8:  # limit for demo
+        auto_size = min(250, int(st.session_state.balance * 0.15))
+        auto_market = "$PEPE" if len(st.session_state.trades) % 2 == 0 else "$BONK"
+        action = "BUY" if len(st.session_state.trades) % 3 != 0 else "SELL"
+        
+        if action == "BUY":
+            st.session_state.balance -= auto_size
+        else:
+            st.session_state.balance += auto_size * 1.12
+        
+        st.session_state.pnl_history.append(st.session_state.balance)
+        st.session_state.trades.append({
+            "time": datetime.now().strftime("%H:%M:%S"),
+            "market": auto_market,
+            "action": action,
+            "size": auto_size,
+            "reason": "AI detected high edge + volume spike"
+        })
+        st.success(f"🤖 AI Auto-{action} ${auto_size} {auto_market} • Reason: High edge + volume spike")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "🔥 Auto Snipes", "Polymarket", "Crypto Spot", "Performance"])
 
 with tab1:
     st.subheader("System Status")
-    st.info("AI Auto-Sniper active • Scanning for high-edge opportunities every refresh")
+    st.info("AI Auto-Trader running • Scanning every refresh")
 
-with tab2:  # Auto Snipes
+with tab2:
     st.subheader("🔥 Auto Meme Coin Snipes")
-    st.caption("AI automatically finds and executes high-edge trades")
-
-    # Auto trade simulation when toggle is on
-    if st.session_state.auto_trade:
-        st.warning("🚀 AUTO SNIPER MODE ACTIVE — AI is entering trades automatically")
-        # Simulate AI decision and execution
-        if len(st.session_state.trades) < 5:  # limit for demo
-            auto_size = 150
-            auto_market = "$PEPE" if len(st.session_state.trades) % 2 == 0 else "$BONK"
-            st.session_state.balance += auto_size * 0.75
-            st.session_state.pnl_history.append(st.session_state.balance)
-            st.session_state.trades.append({"time": datetime.now().strftime("%H:%M"), "market": auto_market, "size": auto_size, "action": "AUTO SNIPE"})
-            st.success(f"AI Auto-Sniped ${auto_size} {auto_market} • Filled!")
+    st.caption("AI automatically buys and sells based on edge detection")
 
     meme_data = [
         ("$PEPE", 0.00001234, 1240000, 45.2),
@@ -95,11 +106,11 @@ with tab2:  # Auto Snipes
             c1.write(f"**{name}** — ${price}")
             c2.metric("Volume", f"${volume:,}")
             c3.metric("Edge", f"+{edge:.1f}%")
-            if c4.button("🚀 SNIPE NOW", key=name):
+            if c4.button("🚀 MANUAL SNIPE", key=name):
                 st.session_state.balance += 200 * 0.75
                 st.session_state.pnl_history.append(st.session_state.balance)
                 st.session_state.trades.append({"time": datetime.now().strftime("%H:%M"), "market": name, "size": 200})
-                st.success(f"SNIPED ${200} {name} • Filled!")
+                st.success(f"Manual snipe executed ${200} {name}")
             st.markdown('</div>', unsafe_allow_html=True)
 
 with tab3:
@@ -129,14 +140,14 @@ with tab5:
     st.plotly_chart(fig, use_container_width=True)
 
     if st.session_state.trades:
-        st.subheader("Recent Snipes")
+        st.subheader("Recent Auto Trades")
         df = pd.DataFrame(st.session_state.trades)
         st.dataframe(df, use_container_width=True)
 
 # Sidebar
 st.sidebar.title("Controls")
-st.sidebar.toggle("Auto Sniper Mode (AI Auto-Enter Trades)", value=st.session_state.auto_trade)
-st.sidebar.caption("Burner wallet only • AI auto-enters high-edge trades when enabled")
+st.sidebar.toggle("Full Auto Mode (AI Buys & Sells Without You)", value=st.session_state.auto_trade)
+st.sidebar.caption("Burner wallet only • AI fully autonomous when enabled")
 
-if st.button("Refresh Terminal (AI Scans Again)"):
+if st.button("Refresh Terminal (AI Scans & Trades)"):
     st.rerun()
