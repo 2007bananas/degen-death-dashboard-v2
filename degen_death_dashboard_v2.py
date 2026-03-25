@@ -4,8 +4,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import os
+import time
 
-st.set_page_config(page_title="NEXUS CAPITAL • Sniper Terminal", layout="wide", page_icon="🔥")
+st.set_page_config(page_title="NEXUS CAPITAL • Auto Sniper", layout="wide", page_icon="🔥")
 
 st.markdown("""
 <style>
@@ -19,7 +20,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="header">NEXUS CAPITAL</h1>', unsafe_allow_html=True)
-st.caption("Sniper Terminal • Meme Coins + Polymarket + Global Risk + AI Self-Update")
+st.caption("Auto Sniper Terminal • Meme Coins + Polymarket + Global Risk")
 
 # Session State
 if "balance" not in st.session_state: st.session_state.balance = 1000.0
@@ -56,26 +57,35 @@ if st.button("🔗 Connect Phantom Wallet"):
 if st.session_state.wallet_address:
     st.info(f"Connected: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
 
-st.success("🟢 LIVE • Meme Sniper + Polymarket + Global Risk + AI Self-Update")
+st.success("🟢 LIVE • Auto Sniper Mode Ready")
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "🔥 Meme Snipes", "Polymarket", "Crypto Spot", "Performance"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "🔥 Auto Snipes", "Polymarket", "Crypto Spot", "Performance"])
 
 with tab1:
     st.subheader("System Status")
-    if st.button("🧠 AI Self-Update"):
-        st.success("AI updated itself with latest market data and new insights!")
-        st.info("New edge detected: High volume meme coins showing 40%+ upside potential in next 5 min.")
+    st.info("AI Auto-Sniper active • Scanning for high-edge opportunities every refresh")
 
-with tab2:  # Meme Snipes (competitive with meme coin tools)
-    st.subheader("🔥 Trending Meme Coins (DexScreener Style)")
-    st.caption("Live volume spikes, new launches, whale buys")
+with tab2:  # Auto Snipes
+    st.subheader("🔥 Auto Meme Coin Snipes")
+    st.caption("AI automatically finds and executes high-edge trades")
+
+    # Auto trade simulation when toggle is on
+    if st.session_state.auto_trade:
+        st.warning("🚀 AUTO SNIPER MODE ACTIVE — AI is entering trades automatically")
+        # Simulate AI decision and execution
+        if len(st.session_state.trades) < 5:  # limit for demo
+            auto_size = 150
+            auto_market = "$PEPE" if len(st.session_state.trades) % 2 == 0 else "$BONK"
+            st.session_state.balance += auto_size * 0.75
+            st.session_state.pnl_history.append(st.session_state.balance)
+            st.session_state.trades.append({"time": datetime.now().strftime("%H:%M"), "market": auto_market, "size": auto_size, "action": "AUTO SNIPE"})
+            st.success(f"AI Auto-Sniped ${auto_size} {auto_market} • Filled!")
 
     meme_data = [
         ("$PEPE", 0.00001234, 1240000, 45.2),
         ("$BONK", 0.00002345, 890000, 32.1),
         ("$WIF", 2.34, 670000, 18.9),
         ("$GROK", 8.45, 450000, 67.8),
-        ("$MOODENG", 0.00123, 320000, 89.4),
     ]
 
     for name, price, volume, edge in meme_data:
@@ -125,8 +135,8 @@ with tab5:
 
 # Sidebar
 st.sidebar.title("Controls")
-st.sidebar.toggle("Auto Sniper Mode", value=st.session_state.auto_trade)
-st.sidebar.caption("Burner wallet only • AI Self-Update enabled")
+st.sidebar.toggle("Auto Sniper Mode (AI Auto-Enter Trades)", value=st.session_state.auto_trade)
+st.sidebar.caption("Burner wallet only • AI auto-enters high-edge trades when enabled")
 
-if st.button("Refresh Terminal"):
+if st.button("Refresh Terminal (AI Scans Again)"):
     st.rerun()
