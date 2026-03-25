@@ -46,10 +46,10 @@ with tab1:  # Dashboard
         else:
             st.error("💀 24 HOURS PASSED — BOT SELF-DESTRUCTED")
     with col3:
-        st.metric("Win Rate (Sim)", "87%", "↑ 12%")
+        st.metric("Simulated Win Rate", "87%", "↑ 12%")
 
     st.subheader("System Status")
-    st.success("🟢 All Sub-Agents Online • Connected to Polymarket Gamma API")
+    st.success("🟢 All Sub-Agents Online • Connected to Polymarket")
 
 with tab2:  # Live Markets
     st.subheader("🔥 Live 5-Minute Volatility Casino")
@@ -75,12 +75,12 @@ with tab2:  # Live Markets
 
         if edge > 12:
             with st.container():
-                st.markdown(f'<div class="card edge">', unsafe_allow_html=True)
+                st.markdown('<div class="card edge">', unsafe_allow_html=True)
                 colA, colB, colC, colD = st.columns([3,1,1,1])
                 colA.write(f"**{q}**")
-                colB.metric("Edge", f"+{edge:.1f}%", delta_color="normal")
+                colB.metric("Edge", f"+{edge:.1f}%")
                 colC.metric("Implied", f"{yes_price*100:.1f}%")
-                colD.metric("Vol", f"${volume:,}")
+                colD.metric("Volume", f"${volume:,}")
                 
                 size = min(300, st.session_state.balance * (edge/100) * 0.45)
                 if st.button(f"EXECUTE ${size:.0f}", key=m.get("id", q)):
@@ -89,4 +89,15 @@ with tab2:  # Live Markets
                     st.success("✅ Order Filled")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-with tab3:
+with tab3:  # AI Agents
+    st.subheader("🤖 Active AI Sub-Agents")
+    cols = st.columns(3)
+    with cols[0]:
+        st.info("**🔍 Scanner**  \nReal-time order book + market scanner")
+    with cols[1]:
+        st.info("**📡 Edge Oracle**  \nVolatility crush + momentum detection")
+    with cols[2]:
+        st.info("**⚡ Reaper**  \nSmart order execution engine")
+
+with tab4:  # PNL History
+    st.subheader("📈 Profit & Loss History
