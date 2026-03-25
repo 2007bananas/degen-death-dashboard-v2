@@ -1,5 +1,5 @@
 # --------------------------------------------------------------
-# NEXUS CAPITAL – ULTRA-INTELLIGENT TRADING TERMINAL
+# NEXUS CAPITAL – ADVANCED REAL-TIME TRADING AI
 # --------------------------------------------------------------
 import streamlit as st
 import pandas as pd
@@ -18,6 +18,18 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 from collections import deque
+import re
+from textblob import TextBlob
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+# Download necessary NLTK data (only if needed)
+try:
+    nltk.download('vader_lexicon', quiet=True)
+    nltk.download('punkt', quiet=True)
+    nltk.download('stopwords', quiet=True)
+except:
+    pass
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -53,7 +65,11 @@ if "ai" not in st.session_state:
         "next_prediction": None,
         "prediction_time": None,
         "prediction_confidence": 0.0,
-        "prediction_accuracy": 0.0
+        "prediction_accuracy": 0.0,
+        "social_sentiment": 65,
+        "social_volume": 1250,
+        "twitter_keywords": ["meme", "coin", "pump", "alpha", "gem", "100x", "moon"],
+        "telegram_keywords": ["alpha", "pump", "snipe", "presale", "new token", "100x"]
     }
 if "wallet_address" not in st.session_state:
     st.session_state.wallet_address = None
@@ -76,6 +92,8 @@ if "intelligence" not in st.session_state:
         "technical_indicators": [],
         "macroeconomic": [],
         "geopolitical": [],
+        "twitter_monitoring": [],
+        "telegram_monitoring": [],
         "market_outlook": "NEUTRAL",
         "prediction": None
     }
@@ -102,7 +120,7 @@ if "auto_trade_settings" not in st.session_state:
     }
 
 # ------------------------------------------------------------------
-# Advanced AI system - sees patterns before they happen
+# Enhanced AI system with social media monitoring
 # ------------------------------------------------------------------
 def generate_intelligence_data():
     """Generate ultra-sophisticated market intelligence data from 47+ sources"""
@@ -115,6 +133,8 @@ def generate_intelligence_data():
         "technical_indicators": [],
         "macroeconomic": [],
         "geopolitical": [],
+        "twitter_monitoring": [],
+        "telegram_monitoring": [],
         "market_outlook": "NEUTRAL",
         "prediction": None
     }
@@ -134,7 +154,7 @@ def generate_intelligence_data():
             "Shenzhen to Seattle"
         ])
         commodity = random.choice(["Semiconductors", "Lithium", "Copper", "Rare Earth Metals", "Battery Components"])
-        confidence = random.uniform(0.85, 0.98)  # Higher confidence for predictive AI
+        confidence = random.uniform(0.85, 0.98)
         
         # Predictive element - future price impact
         price_impact = random.uniform(2.5, 8.5)
@@ -151,7 +171,41 @@ def generate_intelligence_data():
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
-    # 2. Prediction market intelligence (real-time)
+    # 2. Twitter monitoring (simulated)
+    twitter_monitoring = []
+    for _ in range(random.randint(8, 12)):
+        keyword = random.choice(st.session_state.ai["twitter_keywords"])
+        account = f"@{random.choice(['crypto', 'meme', 'alpha', 'trader', 'whale'])}{random.randint(100, 999)}"
+        tweet = f"🚨 {keyword.upper()} ALERT! {random.choice(['PUMP', 'GEM', '100x'])} {random.choice(['$PEPE', '$SHIB', '$WIF'])} {random.choice(['about to', 'imminent', 'confirmed'])} {random.choice(['30%+', '50%+', '100%+'])} moon! {random.choice(['$1M volume', '1000+ holders', 'whale accumulation'])} https://t.co/{random.randint(1000, 9999)}"
+        sentiment = TextBlob(tweet).sentiment.polarity
+        confidence = random.uniform(0.7, 0.9)
+        
+        twitter_monitoring.append({
+            "account": account,
+            "tweet": tweet,
+            "keyword": keyword,
+            "sentiment": sentiment,
+            "confidence": confidence,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+    
+    # 3. Telegram monitoring (simulated)
+    telegram_monitoring = []
+    for _ in range(random.randint(5, 7)):
+        channel = random.choice(["Alpha Hunters", "Meme Coin Pump Group", "Crypto Gurus", "100x Alerts"])
+        message = f"🔥 {random.choice(['NEW', 'HOT'])} {random.choice(['PUMP', 'ALPHA'])} ALERT! {random.choice(['$PEPE', '$SHIB', '$WIF'])} {random.choice(['pre-pump', '5 minutes left', 'GOING LIVE'])} {random.choice(['20%+', '35%+', '50%+'])} gain! {random.choice(['DM for entry', 'Join our group', 'Limited spots'])}"
+        sentiment = TextBlob(message).sentiment.polarity
+        confidence = random.uniform(0.65, 0.85)
+        
+        telegram_monitoring.append({
+            "channel": channel,
+            "message": message,
+            "confidence": confidence,
+            "sentiment": sentiment,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+    
+    # 4. Prediction market intelligence (real-time)
     prediction_markets = []
     for _ in range(random.randint(4, 6)):
         market = random.choice([
@@ -163,22 +217,18 @@ def generate_intelligence_data():
             "Kalshi: Will US inflation slow down by Q3?",
             "Polymarket: Will Solana overtake Ethereum in market cap?"
         ])
-        probability = random.uniform(0.65, 0.92)  # Higher probability for predictive AI
+        probability = random.uniform(0.65, 0.92)
         trend = "BULLISH" if probability > 0.7 else "BEARISH"
-        
-        # Predictive element - market reaction timing
-        reaction_time = random.choice(["<2h", "2-4h", "4-8h", "8-12h"])
         
         prediction_markets.append({
             "market": market,
             "probability": probability,
             "trend": trend,
             "confidence": random.uniform(0.8, 0.95),
-            "reaction_time": reaction_time,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
-    # 3. News event intelligence (predictive)
+    # 5. News event intelligence (predictive)
     news_events = []
     for _ in range(random.randint(5, 8)):
         event_type = random.choice([
@@ -198,7 +248,6 @@ def generate_intelligence_data():
         impact = random.choice(["CRITICAL", "HIGH", "MEDIUM", "LOW"])
         confidence = random.uniform(0.75, 0.95)
         
-        # Predictive element - event timing
         timing = random.choice(["<1h", "1-3h", "3-6h", "6-12h", "12-24h"])
         
         news_events.append({
@@ -211,17 +260,15 @@ def generate_intelligence_data():
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
-    # 4. Social sentiment intelligence (real-time trend detection)
+    # 6. Social sentiment intelligence
     social_sentiment = []
     for _ in range(random.randint(4, 6)):
-        platform = random.choice(["Twitter", "Reddit", "Telegram", "Discord", "4chan"])
+        platform = random.choice(["Twitter", "Reddit", "Telegram", "Discord"])
         metric = random.choice([
             "Mentions", "Sentiment Score", "Engagement Rate", "New Users", "Whale Activity"
         ])
-        value = random.uniform(0.7, 0.95)  # Higher values for predictive AI
+        value = random.uniform(0.7, 0.95)
         trend = "↑" if value > 0.8 else "→" if value > 0.6 else "↓"
-        
-        # Predictive element - trend acceleration
         acceleration = random.choice(["Rapid", "Steady", "Slowing"])
         
         social_sentiment.append({
@@ -234,7 +281,7 @@ def generate_intelligence_data():
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
-    # 5. Technical indicators (predictive patterns)
+    # 7. Technical indicators (predictive patterns)
     technical_indicators = []
     for _ in range(random.randint(5, 7)):
         indicator = random.choice([
@@ -245,7 +292,6 @@ def generate_intelligence_data():
         strength = random.choice(["STRONG", "MODERATE", "WEAK"])
         confidence = random.uniform(0.7, 0.9)
         
-        # Predictive element - pattern completion time
         completion_time = random.choice(["<5 min", "5-15 min", "15-30 min", "30-60 min"])
         
         technical_indicators.append({
@@ -257,7 +303,7 @@ def generate_intelligence_data():
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
-    # 6. Macroeconomic indicators (predictive)
+    # 8. Macroeconomic indicators (predictive)
     macroeconomic = []
     for _ in range(random.randint(3, 5)):
         indicator = random.choice([
@@ -267,7 +313,6 @@ def generate_intelligence_data():
         prediction = random.choice(["Higher than expected", "Lower than expected", "As expected"])
         confidence = random.uniform(0.75, 0.92)
         
-        # Predictive element - market impact timing
         impact_time = random.choice(["<1h", "1-2h", "2-4h"])
         
         macroeconomic.append({
@@ -278,7 +323,7 @@ def generate_intelligence_data():
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
-    # 7. Geopolitical events (predictive)
+    # 9. Geopolitical events (predictive)
     geopolitical = []
     for _ in range(random.randint(2, 4)):
         event = random.choice([
@@ -288,7 +333,6 @@ def generate_intelligence_data():
         potential_impact = random.choice(["HIGH", "MEDIUM", "LOW"])
         confidence = random.uniform(0.7, 0.9)
         
-        # Predictive element - event timing
         event_time = random.choice(["<2h", "2-6h", "6-12h", "12-24h"])
         
         geopolitical.append({
@@ -299,7 +343,7 @@ def generate_intelligence_data():
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
-    # Predict the next market movement (the "future sight" capability)
+    # Predict the next market movement
     buy_strength = sum(1 for t in technical_indicators if t["signal"] == "BUY" and t["confidence"] > 0.85)
     sell_strength = sum(1 for t in technical_indicators if t["signal"] == "SELL" and t["confidence"] > 0.85)
     bullish_prediction = sum(1 for p in prediction_markets if p["trend"] == "BULLISH" and p["confidence"] > 0.85)
@@ -343,52 +387,126 @@ def generate_intelligence_data():
         "technical_indicators": technical_indicators,
         "macroeconomic": macroeconomic,
         "geopolitical": geopolitical,
+        "twitter_monitoring": twitter_monitoring,
+        "telegram_monitoring": telegram_monitoring,
         "market_outlook": market_direction,
         "prediction": prediction
     }
     
     # Update AI metrics
-    st.session_state.ai["data_sources"] = 47  # Fixed high number for "super AI"
+    st.session_state.ai["data_sources"] = 47
     st.session_state.ai["patterns_identified"] += random.randint(5, 10)
+    st.session_state.ai["social_volume"] = len(twitter_monitoring) + len(telegram_monitoring)
+    
+    # Calculate overall sentiment from social media
+    if twitter_monitoring or telegram_monitoring:
+        total_sentiment = 0
+        total_confidence = 0
+        
+        for tweet in twitter_monitoring:
+            total_sentiment += tweet["sentiment"] * tweet["confidence"]
+            total_confidence += tweet["confidence"]
+        
+        for message in telegram_monitoring:
+            total_sentiment += message["sentiment"] * message["confidence"]
+            total_confidence += message["confidence"]
+        
+        if total_confidence > 0:
+            st.session_state.ai["social_sentiment"] = int(50 + (total_sentiment / total_confidence) * 50)
+        else:
+            st.session_state.ai["social_sentiment"] = 50
     
     # Update prediction metrics
     st.session_state.ai["prediction_time"] = datetime.now().strftime("%H:%M:%S")
     st.session_state.ai["prediction_confidence"] = confidence_score * 100
     st.session_state.ai["next_prediction"] = prediction
 
-def get_intelligence_summary():
-    """Generate a concise summary of the current market intelligence with predictive insights"""
-    if not st.session_state.intelligence or not st.session_state.intelligence.get("prediction"):
-        return "No intelligence data available yet"
+# ------------------------------------------------------------------
+# Social media monitoring and analysis
+# ------------------------------------------------------------------
+def analyze_social_media():
+    """Analyze social media data for trading signals"""
+    if not st.session_state.intelligence:
+        return []
     
-    prediction = st.session_state.intelligence["prediction"]
+    signals = []
+    twitter = st.session_state.intelligence.get("twitter_monitoring", [])
+    telegram = st.session_state.intelligence.get("telegram_monitoring", [])
     
-    if prediction["direction"] == "UP":
-        arrow = "↑"
-        color = "green"
-        description = f"Rise of {prediction['price_change']:.1f}% expected"
-    elif prediction["direction"] == "DOWN":
-        arrow = "↓"
-        color = "red"
-        description = f"Drop of {abs(prediction['price_change']):.1f}% expected"
-    else:
-        arrow = "→"
-        color = "yellow"
-        description = "Sideways movement expected"
+    # 1. Twitter analysis
+    if twitter:
+        # Count mentions by keyword
+        keyword_counts = {}
+        sentiment_by_keyword = {}
+        
+        for tweet in twitter:
+            keyword = tweet["keyword"]
+            keyword_counts[keyword] = keyword_counts.get(keyword, 0) + 1
+            sentiment_by_keyword[keyword] = sentiment_by_keyword.get(keyword, 0) + tweet["sentiment"] * tweet["confidence"]
+        
+        # Analyze for patterns
+        for keyword, count in keyword_counts.items():
+            if count > 5:  # Threshold for significant volume
+                avg_sentiment = sentiment_by_keyword[keyword] / count
+                if avg_sentiment > 0.5 and count > 8:
+                    signals.append({
+                        "asset": "PEPE",  # Default to most mentioned meme coin
+                        "action": "BUY",
+                        "confidence": min(0.95, 0.7 + count * 0.03),
+                        "reason": f"High volume Twitter mentions of '{keyword}' with strong positive sentiment",
+                        "type": "twitter_trend"
+                    })
     
-    confidence_emoji = "🌟" * max(1, min(5, int(prediction["confidence"] * 5)))
+    # 2. Telegram analysis
+    if telegram:
+        # Count messages by channel
+        channel_counts = {}
+        sentiment_by_channel = {}
+        
+        for message in telegram:
+            channel = message["channel"]
+            channel_counts[channel] = channel_counts.get(channel, 0) + 1
+            sentiment_by_channel[channel] = sentiment_by_channel.get(channel, 0) + message["sentiment"] * message["confidence"]
+        
+        # Analyze for patterns
+        for channel, count in channel_counts.items():
+            if count > 3:  # Threshold for significant volume
+                avg_sentiment = sentiment_by_channel[channel] / count
+                if avg_sentiment > 0.4 and count > 4:
+                    signals.append({
+                        "asset": "SHIB",  # Default to another popular meme coin
+                        "action": "BUY",
+                        "confidence": min(0.95, 0.6 + count * 0.05),
+                        "reason": f"High activity in '{channel}' Telegram group with positive sentiment",
+                        "type": "telegram_trend"
+                    })
     
-    return f"""
-    <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 1.5em; color: {color};">{arrow}</span>
-        <span style="font-weight: bold;">{description}</span>
-        <span style="color: #3b82f6;">in {prediction['timeframe']}</span>
-        <div style="display: flex; margin-left: auto;">
-            {confidence_emoji}
-        </div>
-    </div>
-    """
+    # 3. Combined social media analysis
+    if twitter and telegram:
+        # Calculate overall social media signal
+        total_volume = len(twitter) + len(telegram)
+        total_sentiment = 0
+        
+        for tweet in twitter:
+            total_sentiment += tweet["sentiment"] * tweet["confidence"]
+        
+        for message in telegram:
+            total_sentiment += message["sentiment"] * message["confidence"]
+        
+        if total_volume > 10 and total_sentiment > 0:
+            signals.append({
+                "asset": "WIF",  # Another popular meme coin
+                "action": "BUY",
+                "confidence": min(0.95, 0.65 + (total_sentiment / total_volume) * 0.3),
+                "reason": f"High social media volume ({total_volume} mentions) with strong positive sentiment",
+                "type": "social_media"
+            })
+    
+    return signals
 
+# ------------------------------------------------------------------
+# Advanced AI analysis with self-learning
+# ------------------------------------------------------------------
 def analyze_intelligence():
     """Analyze intelligence data to generate high-confidence trading signals"""
     if not st.session_state.intelligence or not st.session_state.intelligence.get("prediction"):
@@ -420,7 +538,11 @@ def analyze_intelligence():
             "timeframe": prediction["timeframe"]
         })
     
-    # 2. Shipping route signals
+    # 2. Social media signals
+    social_signals = analyze_social_media()
+    signals.extend(social_signals)
+    
+    # 3. Shipping route signals
     for route in st.session_state.intelligence["shipping_routes"]:
         if route["impact"] == "CRITICAL" and route["confidence"] > 0.9:
             if "Semiconductors" in route["commodity"] or "Lithium" in route["commodity"]:
@@ -440,7 +562,7 @@ def analyze_intelligence():
                     "type": "commodity"
                 })
     
-    # 3. Prediction market signals
+    # 4. Prediction market signals
     for market in st.session_state.intelligence["prediction_markets"]:
         if market["trend"] == "BULLISH" and market["confidence"] > 0.85:
             if "Bitcoin" in market["market"]:
@@ -460,7 +582,7 @@ def analyze_intelligence():
                     "type": "prediction_market"
                 })
     
-    # 4. News event signals
+    # 5. News event signals
     for event in st.session_state.intelligence["news_events"]:
         if event["impact"] == "CRITICAL" and event["confidence"] > 0.85:
             if event["sentiment"] == "POSITIVE" and "regulatory" in event["type"].lower():
@@ -727,7 +849,6 @@ def simulate_trade(symbol, amount, action, reason=""):
 # ------------------------------------------------------------------
 def render_ai_viz():
     """Render professional AI visualization components"""
-    # Create a more advanced AI visualization
     st.subheader("🧠 AI Intelligence Dashboard")
     
     # 1. AI Performance Metrics
@@ -741,7 +862,62 @@ def render_ai_viz():
     with col4:
         st.metric("Patterns Identified", st.session_state.ai["patterns_identified"])
     
-    # 2. AI Learning Curve
+    # 2. Social Media Monitoring
+    st.subheader("📱 Social Media Monitoring")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.metric("Twitter Mentions", st.session_state.ai["social_volume"])
+        st.metric("Current Sentiment", f"{st.session_state.ai['social_sentiment']}%")
+        
+        # Twitter sentiment gauge
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = st.session_state.ai["social_sentiment"],
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': "Twitter Sentiment"},
+            gauge = {
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                'bar': {'color': "darkblue"},
+                'steps': [
+                    {'range': [0, 40], 'color': '#f472b6'},
+                    {'range': [40, 60], 'color': '#f59e0b'},
+                    {'range': [60, 100], 'color': '#10b981'}],
+                'threshold': {
+                    'line': {'color': "red", 'width': 4},
+                    'thickness': 0.75,
+                    'value': 70}
+            }
+        ))
+        
+        fig.update_layout(
+            height=250,
+            template="plotly_dark",
+            paper_bgcolor="#05080f",
+            margin=dict(l=20, r=20, t=20, b=20)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        st.metric("Telegram Groups", st.session_state.ai["social_volume"] // 2)
+        st.metric("Trending Keywords", len(st.session_state.ai["twitter_keywords"]))
+        
+        # Social volume chart
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=["Twitter", "Telegram"], 
+                           y=[st.session_state.ai["social_volume"], st.session_state.ai["social_volume"] // 1.5],
+                           marker_color=['#1da1f2', '#0088cc']))
+        
+        fig.update_layout(
+            title="Social Media Activity",
+            height=250,
+            template="plotly_dark",
+            paper_bgcolor="#05080f",
+            margin=dict(l=20, r=20, t=40, b=20)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # 3. AI Learning Curve
     st.subheader("📈 AI Learning Progress")
     
     if st.session_state.ai["learning_data"]:
@@ -761,13 +937,12 @@ def render_ai_viz():
         )
         st.plotly_chart(fig, use_container_width=True)
     
-    # 3. AI Prediction
+    # 4. AI Prediction
     st.subheader("🔮 AI Prediction Matrix")
     
     if st.session_state.intelligence.get("prediction"):
         prediction = st.session_state.intelligence["prediction"]
         
-        # Create a more detailed prediction display
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -819,7 +994,7 @@ def render_ai_viz():
         )
         st.plotly_chart(fig, use_container_width=True)
     
-    # 4. AI Signal Strength
+    # 5. AI Signal Strength
     signals = analyze_intelligence()
     if signals:
         st.subheader("⚡ AI Signal Strength")
@@ -830,7 +1005,8 @@ def render_ai_viz():
                 "Signal": signal["action"],
                 "Asset": signal["asset"],
                 "Confidence": signal["confidence"] * 100,
-                "Edge Score": signal["edge_score"] * 100
+                "Edge Score": signal["edge_score"] * 100,
+                "Type": signal["type"].replace("_", " ").title()
             })
         
         df = pd.DataFrame(signal_data)
@@ -839,7 +1015,7 @@ def render_ai_viz():
                     x="Asset", 
                     y="Confidence",
                     color="Edge Score",
-                    hover_data=["Signal"],
+                    hover_data=["Signal", "Type"],
                     color_continuous_scale="Blues",
                     labels={"Confidence": "Confidence %"},
                     height=250)
@@ -923,4 +1099,4 @@ def render_wallet_connection():
         st.info("Scan this QR code with your wallet app to connect:")
         
         # Generate a base64 QR code placeholder
-        qr_code = "iVBORw0KGgoAAAANSUhEUgAAAGQAAAAkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFMmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTA3OjIwOjUzICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxNiAoV2luZG93cykiIHhtcDpDcmVhdGVEYXRlPSIyMDIzLTAyLTE2VDAwOjM2OjM2KzAyOjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAyMy0wMi0xNlQwMDozNjozNiswMjowMCIgeG1wOk1ldGFkYXRhRGF0ZT0iMjAyMy0wMi0xNlQwMDozNjozNiswMjowMCIgZGM6Zm9ybWF0PSJpbWFnZS9wbmciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiIHBob3Rvc2hvcDpJQ0NQcm9maWxlPSJzUkdCIElFQzYxOTY2LTIuMSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo2OTNkMTA4Yy01NTJlLTQzNjEtODMxYy1iYzJkMzEzNzg2ZjgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NjkzZDEwOGMtNTUyZS00MzYxLTgzMWMtYmMyZDMxMzc4NmY4IiB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6NjkzZDEwOGMtNTUyZS00MzYxLTgzMWMtYmMyZDMxMzc4NmY4Ij4gPHhtcE1NOkhpc3Rvcnk+IDxyZGY6U2VxPiA8cmRmOmxpIHN0RXZ0OmFjdGlvbj0iY3JlYXRlZCIgc3RFdnQ6d2hlbj0iMjAyMy0wMi0xNlQwMDozNjozNiswMjowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTYgKFdpbmRvd3MpIiBzdEV2dDpjaGFuZ2VkPSIvIi8+IDwvcmRmOlNlcT4gPC94bXBNTTpIaXN0b3J5PiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PgH//v38+/r5+Pf29fTz8vHw7+7t7Ovq6ejn5uXk4+Lh4N/e3dzb2tnY19bV1NPS0dDPzs3My8rJyMfGxcTDwsHAv769vLu6ubi3trW0s7KxsK+urKuqqainpqWko6KhoJ+enZyblpWUk5KRkI+OjYyLiomIh4aFhIOCgYB/fn18e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVjYmFgX15dXFtaWVhXVlVUU1JRUE9OTUxLSklIR0ZFRENCQUA/Pj08Ozo5ODc2NTQzMjEwLSwrKikoJyYlJCMiISAfHh0cGxoZGBcWFRQTEhEQDw4NDAsLCgkIBwYFBAMCAQAAIfkEAQAAAwAsAAAAAKwArAAACP8AAQgcSLCgQYQIEyocSLCgwYMIEypcyLChw4cQI0qcSLGixYsYM2rcyLGjx48gQ4ocSbKkyZMoU6pcybKly5cwY8qcSbOmzZs4c+rcybOnz59AgwodSrSo0aNIkypdyrSp06dQo0qdSrWq1atYs2rdyrWr169gw4odS7as2bNo06pdy7at27dw48qdS7eu3bt48+rdy7ev37+AAwseTLiw4cOIEytezLix48eQI0ueTLmy5cuYM2vezLmz58+gQ4seTbq06dOoU6tezbq169ewY8ueTbu27du4c+vezbu379/AgwsfTry48ePIkytfzry58+fQo0ufTr269evYs2vfzr279+/gw4sH2EqW+oDm06sHcP4+uvj06Qf4BwB+fYDnBwAAqK8/fPj9+QsIoD+A/vsB4M9/AAECDCjQHwD/Aw7o7x+AgP8E7M8fAID/AgcS/A8QYEEBAQcS7BfQ4D8BAwUO5PdP4MCDAgkK5BcQYD8CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG3DcQYD+CAgkG
+        qr_code = "iVBORw0KGgoAAAANSUhEUgAAAGQAAAAkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFMmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTA3OjIwOjUzICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxNiAoV2luZG93cykiIHhtcDpDcmVhdGVEYXRlPSIyMDIzLTAyLTE2VDAwOjM2OjM2KzAyOjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAyMy0wMi0xNlQwMDozNjozNiswMjowMCIgeG1wOk1ldGFkYXRhRGF0ZT0iMjAyMy0wMi0xNlQwMDozNjozNiswMjowMCIgZGM6Zm9ybWF0PSJpbWFnZS9wbmciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiIHBob3Rvc2hvcDpJQ0NQcm9maWxlPSJzUkdCIElFQzYxOTY2LTIuMSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo2OTNkMTA4Yy01NTJlLTQzNjEtODMxYy1iYzJkMzEzNzg2ZjgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NjkzZDEwOGMtNTUyZS00MzYxLTgzMWMtYmMyZDMxMzc4NmY4IiB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6NjkzZDEwOGMtNTUyZS00MzYxLTgzMWMtYmMyZDMxMzc4NmY4Ij4gPHhtcE1NOkhpc3Rvcnk+IDxyZGY6U2VxPiA8cmRmOmxpIHN0RXZ0OmFjdGlvbj0iY3JlYXRlZCIgc3RFdnQ6d2hlbj0iMjAyMy0wMi0xNlQwMDozNjozNiswMjowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTYgKFdpbmRvd3MpIiBzdEV2dDpjaGFuZ2VkPSIvIi8+IDwvcmRmOlNlcT4gPC94bXBNTTpIaXN0b3J5PiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PgH//v38+/r5+Pf29fTz8vHw7+7t7Ovq6ejn5uXk4+Lh4N/e3dzb2tnY19bV1NPS0dDPzs3My8rJyMfGxcTDwsHAv769vLu6ubi3trW0s7KxsK+urKuqqainpqWko6KhoJ+enZyblpWUk5KRkI+OjYyLiomIh4aFhIOCgYB/fn18e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVjYmFgX15dXFtaWVhXVlVUU1JRUE9OTUxLSklIR0ZFRENCQUA/Pj08Ozo5ODc2NTQzMjEwLSwrKikoJyYlJCMiISAfHh0cGxoZGBcWFRQTEhEQDw4NDAsLCgkIBwYFBAMCAQAAIfkEAQAAAwAsAAAAAKwArAAACP8AAQgcSLCgQYQIEyocSLCgwYMIEypcyLChw4cQI0qcSLGixYsYM2rcyLGjx48gQ4ocSbKkyZMoU6pcybKly5cwY8qcSbOmzZs4c+rcybOnz59AgwodSrSo0aNIkypdyrSp06dQo0qdSrWq1atYs2rdyrWr169gw4odS7as2bNo06pdy7at27dw48qdS7eu3bt48+rdy7ev37+AAwsfTrw4c+PMAy5n7jw59ObMm0N3zjw6c+TOm0OfDh069enQp0uXHh269OrRq1uvLj269OrQs1O3Xh279ezYs2vP3j179+3gu4P3Dh68ePHiyZcfb/68+fTq169nv549+vbv4b+P/x4+fPnw59WzX9+ePfz269W3n+9+Pv779fXjz48f/v398vXf54+f//z+/vXz388ffn/9+u3rB9A/AQd0L0EFE1zQwQYdZHBABx90UEEGH2zQwQgXZDBCBiV0kEIIK5xQwgktrPBCCy+0UEMLN8xQQw051JBDADcE8cMQQwRxRBBFDJFEE0k0scQSSzRxRBNPRDFDFDVk0UQVU2QxRRZVZJHFFF10kUQSS0TxxRRVRBFFFE880cQVW3QxxhVZjBFGG2W0EUcZdYQRxRZdXHFFGV10scUUW3QxRRdZjBFFG1uE0cUZa7QRRhphjFFGFW18McYVZ3zRxhdVjHFGGmW0UUcWcYQRxhltjBFHGWmE0UYZa5QxRx55jBFGH2vMsccce7SxRh1tjDFGHW3E0cYcZ8wRRx5x1JFHHX300UcggQgiiCCDDEJIIYUQYgghhRBCiCGEFEJIIYQWQmghhRhCiCGGFGJIIYQcckghhRhyiCGHGHKIIYUcYoghhxRiiCGHGFIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAAC
