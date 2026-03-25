@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import os
 
-st.set_page_config(page_title="NEXUS CAPITAL • Terminal", layout="wide", page_icon="🔹")
+st.set_page_config(page_title="NEXUS CAPITAL • Terminal", layout="wide", page_icon="🔹", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
@@ -18,7 +18,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="header">NEXUS CAPITAL</h1>', unsafe_allow_html=True)
-st.caption("Institutional Trading Terminal • Live Execution + Global Intelligence")
+st.caption("Institutional Multi-Asset Terminal • Live Execution")
 
 # Session State
 if "balance" not in st.session_state: st.session_state.balance = 1000.0
@@ -57,7 +57,7 @@ if st.session_state.wallet_address:
 
 st.success("🟢 LIVE • Polymarket + Spot Crypto + Global Risk")
 
-# Multi-Panel Layout (like your screenshot)
+# Multi-Panel Layout (like your Devexperts screenshot)
 col_left, col_center, col_right = st.columns([1.2, 2.8, 1.2])
 
 with col_left:  # Watch List
@@ -78,7 +78,7 @@ with col_center:  # Main Charting
     fig.update_layout(height=520, template="plotly_dark", paper_bgcolor="#0a0f1c")
     st.plotly_chart(fig, use_container_width=True)
 
-    # Order Entry (like your screenshot)
+    # Order Entry Panel (like your screenshot)
     st.subheader("Order Entry")
     symbol = st.selectbox("Symbol", ["BTC 5m Up", "ETH 5m Down", "BTC/USD"])
     size = st.number_input("Size ($)", min_value=50, value=200)
@@ -114,7 +114,7 @@ with tab2:
 # Sidebar
 st.sidebar.title("Controls")
 st.sidebar.toggle("Auto Trading (Reaper Mode)", value=st.session_state.auto_trade)
-st.sidebar.caption("Burner wallet only")
+st.sidebar.caption("Burner wallet only • Professional terminal")
 
 if st.button("Refresh Terminal"):
     st.rerun()
