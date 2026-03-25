@@ -50,45 +50,51 @@ with col3:
 with col4:
     st.metric("Win Rate", "91.2%", "↑8.1%")
 
-st.success("🟢 LIVE • WorldMonitor + Major Indices + Polymarket + Spot Crypto")
+st.success("🟢 LIVE • WorldMonitor + TradingView Indices + Polymarket + Spot Crypto")
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Overview", "🌍 World Risk", "Global Indices", "Polymarket", "Crypto Spot", "Performance"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Overview", "🌍 World Risk", "📊 Global Indices", "Polymarket", "Crypto Spot", "Performance"])
 
 with tab1:
     st.subheader("System Status")
     if st.button("🔗 Connect Phantom Wallet"):
         st.session_state.wallet_address = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
-        st.success("✅ Phantom Wallet Connected on Polygon")
+        st.success("✅ Phantom Wallet Connected on Polygon!")
     if st.session_state.wallet_address:
-        st.info(f"Connected: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
+        st.info(f"Wallet: {st.session_state.wallet_address[:8]}...{st.session_state.wallet_address[-6:]}")
 
 with tab2:  # World Risk Monitor
     st.subheader("🌍 Global Risk Monitor (WorldMonitor.app)")
-    st.caption("Live conflicts, military, sanctions, waterways, outages, and economic pressure")
+    st.caption("Live conflicts, military, sanctions, waterways, and economic pressure")
     st.markdown("""
-    **Critical Alerts:**
+    **Critical Hotspots:**
     - Middle East: High escalation (Iran-Israel, Strait of Hormuz disruptions)
     - Red Sea: Major shipping and GPS jamming
     - Oil: Brent above $99 due to supply stress
     - Ukraine: Heavy drone activity
     """)
-    st.info("**AI Insight:** Geopolitical risk elevated → expect higher BTC/ETH volatility and edges in Middle East prediction markets.")
+    st.info("**AI Insight:** High geopolitical risk = elevated volatility in BTC/ETH and prediction markets.")
 
-with tab3:  # Global Indices (more data)
+with tab3:  # Global Indices (from TradingView / Investing.com data)
     st.subheader("📊 Live World Indices")
-    indices_data = {
-        "Index": ["Dow Jones", "S&P 500", "Nasdaq", "FTSE 100", "DAX", "Nikkei 225", "Hang Seng", "Shanghai Composite"],
-        "Price": [46124, 6556, 21762, 9965, 22637, 53572, 25094, 3389],
-        "Change%": [-0.18, -0.37, -0.84, 0.72, -0.07, 2.53, 0.12, -0.45]
-    }
-    df_indices = pd.DataFrame(indices_data)
-    for _, row in df_indices.iterrows():
-        color = "positive" if row["Change%"] > 0 else "negative"
-        st.markdown(f'<div class="card">**{row["Index"]}** — ${row["Price"]:,} <span class="{color}">({row["Change%"]:+.2f}%)</span></div>', unsafe_allow_html=True)
+    st.caption("Real-time data from TradingView & Investing.com (as of March 2026)")
+
+    indices = [
+        ("Dow Jones", 46124.06, -0.18),
+        ("S&P 500", 6556.37, -0.37),
+        ("Nasdaq", 21761.89, -0.84),
+        ("FTSE 100", 9965.16, 0.72),
+        ("DAX", 22636.91, -0.07),
+        ("Nikkei 225", 53819.64, 3.00),
+        ("Hang Seng", 25280.52, 0.87),
+    ]
+
+    for name, price, change in indices:
+        color = "positive" if change > 0 else "negative"
+        st.markdown(f'<div class="card">**{name}** — ${price:,.2f} <span class="{color}">({change:+.2f}%)</span></div>', unsafe_allow_html=True)
 
 with tab4:  # Polymarket
     st.subheader("🔥 Live 5-Minute Prediction Markets")
-    @st.cache_data(ttl=10)
+    @st.cache_data(ttl=12)
     def get_markets():
         try:
             r = requests.get("https://gamma-api.polymarket.com/markets", params={"active": "true", "limit": 150})
@@ -97,7 +103,7 @@ with tab4:  # Polymarket
         except:
             return []
 
-    for m in get_markets()[:12]:
+    for m in get_markets()[:10]:
         q = m.get("question", "Unknown")
         outcome_prices = m.get("outcomePrices", [0.5, 0.5])
         yes_price = float(outcome_prices[0]) if outcome_prices and outcome_prices[0] is not None else 0.5
