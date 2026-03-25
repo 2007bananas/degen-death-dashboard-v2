@@ -22,10 +22,14 @@ st.markdown('<h1 class="main-header">⚡ DEGEN DASH v2.1</h1>', unsafe_allow_htm
 st.caption("Professional Prediction Market Trading Terminal • 5x or Delete")
 
 # Session State
-if "balance" not in st.session_state: st.session_state.balance = 1000.0
-if "pnl_history" not in st.session_state: st.session_state.pnl_history = [1000.0]
-if "start_time" not in st.session_state: st.session_state.start_time = datetime.now()
-if "auto_trade" not in st.session_state: st.session_state.auto_trade = False
+if "balance" not in st.session_state: 
+    st.session_state.balance = 1000.0
+if "pnl_history" not in st.session_state: 
+    st.session_state.pnl_history = [1000.0]
+if "start_time" not in st.session_state: 
+    st.session_state.start_time = datetime.now()
+if "auto_trade" not in st.session_state: 
+    st.session_state.auto_trade = False
 
 if "PRIVATE_KEY" in st.secrets:
     os.environ["PRIVATE_KEY"] = st.secrets["PRIVATE_KEY"]
@@ -100,4 +104,24 @@ with tab3:  # AI Agents
         st.info("**⚡ Reaper**  \nSmart order execution engine")
 
 with tab4:  # PNL History
-    st.subheader("📈 Profit & Loss History
+    st.subheader("📈 Profit & Loss History")
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(y=st.session_state.pnl_history, mode='lines+markers', 
+                            line=dict(color='#67e8f9', width=3)))
+    fig.update_layout(height=500, template="plotly_dark", paper_bgcolor="#0f172a", plot_bgcolor="#1e2937")
+    st.plotly_chart(fig, use_container_width=True)
+
+with tab5:  # Settings
+    st.subheader("⚙️ Control Panel")
+    st.session_state.auto_trade = st.toggle("AUTO-TRADE ENABLED (Reaper Mode)", value=st.session_state.auto_trade)
+    if st.session_state.auto_trade:
+        st.success("⚡ Reaper is now live and hunting edges")
+    else:
+        st.warning("Reaper is in manual mode")
+
+    st.caption("Burner wallet recommended • Max $500 to start")
+
+st.sidebar.success("Connected to Polymarket • Live Data")
+
+if st.button("🔄 Refresh All Data"):
+    st.rerun()
